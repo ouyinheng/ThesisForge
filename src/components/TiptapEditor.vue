@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import { watch, onMounted, nextTick } from 'vue'
-import { NIcon } from 'naive-ui'
+import { NIcon, NTooltip } from 'naive-ui'
+import { useI18n } from '../composables/useI18n'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import Link from '@tiptap/extension-link'
@@ -40,6 +41,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:modelValue': [value: string]
 }>()
+
+const { t } = useI18n()
 
 const lowlight = createLowlight(all)
 
@@ -110,63 +113,158 @@ function addImage(): void {
 <template>
   <div class="tiptap-wrapper">
     <div class="toolbar" v-if="editor">
-      <button class="tool-btn" @click="editor.chain().focus().toggleBold().run()" :class="{ active: editor.isActive('bold') }">
-        B
-      </button>
-      <button class="tool-btn tool-italic" @click="editor.chain().focus().toggleItalic().run()" :class="{ active: editor.isActive('italic') }">
-        I
-      </button>
-      <button class="tool-btn tool-underline" @click="editor.chain().focus().toggleUnderline().run()" :class="{ active: editor.isActive('underline') }">
-        U
-      </button>
-      <button class="tool-btn tool-strike" @click="editor.chain().focus().toggleStrike().run()" :class="{ active: editor.isActive('strike') }">
-        S
-      </button>
+      <NTooltip :show-arrow="false" trigger="hover">
+        <template #trigger>
+          <button class="tool-btn" @click="editor.chain().focus().toggleBold().run()" :class="{ active: editor.isActive('bold') }">
+            B
+          </button>
+        </template>
+        {{ t('editor.toolbar.bold') }}
+      </NTooltip>
+      <NTooltip :show-arrow="false" trigger="hover">
+        <template #trigger>
+          <button class="tool-btn tool-italic" @click="editor.chain().focus().toggleItalic().run()" :class="{ active: editor.isActive('italic') }">
+            I
+          </button>
+        </template>
+        {{ t('editor.toolbar.italic') }}
+      </NTooltip>
+      <NTooltip :show-arrow="false" trigger="hover">
+        <template #trigger>
+          <button class="tool-btn tool-underline" @click="editor.chain().focus().toggleUnderline().run()" :class="{ active: editor.isActive('underline') }">
+            U
+          </button>
+        </template>
+        {{ t('editor.toolbar.underline') }}
+      </NTooltip>
+      <NTooltip :show-arrow="false" trigger="hover">
+        <template #trigger>
+          <button class="tool-btn tool-strike" @click="editor.chain().focus().toggleStrike().run()" :class="{ active: editor.isActive('strike') }">
+            S
+          </button>
+        </template>
+        {{ t('editor.toolbar.strike') }}
+      </NTooltip>
       <span class="tool-divider"></span>
-      <button class="tool-btn" @click="editor.chain().focus().toggleHeading({ level: 2 }).run()" :class="{ active: editor.isActive('heading', { level: 2 }) }">
-        H2
-      </button>
-      <button class="tool-btn" @click="editor.chain().focus().toggleHeading({ level: 3 }).run()" :class="{ active: editor.isActive('heading', { level: 3 }) }">
-        H3
-      </button>
+      <NTooltip :show-arrow="false" trigger="hover">
+        <template #trigger>
+          <button class="tool-btn" @click="editor.chain().focus().toggleHeading({ level: 2 }).run()" :class="{ active: editor.isActive('heading', { level: 2 }) }">
+            H2
+          </button>
+        </template>
+        {{ t('editor.toolbar.heading2') }}
+      </NTooltip>
+      <NTooltip :show-arrow="false" trigger="hover">
+        <template #trigger>
+          <button class="tool-btn" @click="editor.chain().focus().toggleHeading({ level: 3 }).run()" :class="{ active: editor.isActive('heading', { level: 3 }) }">
+            H3
+          </button>
+        </template>
+        {{ t('editor.toolbar.heading3') }}
+      </NTooltip>
       <span class="tool-divider"></span>
-      <button class="tool-btn" @click="editor.chain().focus().toggleBulletList().run()" :class="{ active: editor.isActive('bulletList') }">
-        <NIcon :size="14"><ListOutline /></NIcon>
-      </button>
-      <button class="tool-btn" @click="editor.chain().focus().toggleOrderedList().run()" :class="{ active: editor.isActive('orderedList') }">
-        <NIcon :size="14"><ListCircleOutline /></NIcon>
-      </button>
-      <button class="tool-btn" @click="editor.chain().focus().toggleTaskList().run()" :class="{ active: editor.isActive('taskList') }">
-        <NIcon :size="14"><CheckboxOutline /></NIcon>
-      </button>
+      <NTooltip :show-arrow="false" trigger="hover">
+        <template #trigger>
+          <button class="tool-btn" @click="editor.chain().focus().toggleBulletList().run()" :class="{ active: editor.isActive('bulletList') }">
+            <NIcon :size="14"><ListOutline /></NIcon>
+          </button>
+        </template>
+        {{ t('editor.toolbar.bulletList') }}
+      </NTooltip>
+      <NTooltip :show-arrow="false" trigger="hover">
+        <template #trigger>
+          <button class="tool-btn" @click="editor.chain().focus().toggleOrderedList().run()" :class="{ active: editor.isActive('orderedList') }">
+            <NIcon :size="14"><ListCircleOutline /></NIcon>
+          </button>
+        </template>
+        {{ t('editor.toolbar.orderedList') }}
+      </NTooltip>
+      <NTooltip :show-arrow="false" trigger="hover">
+        <template #trigger>
+          <button class="tool-btn" @click="editor.chain().focus().toggleTaskList().run()" :class="{ active: editor.isActive('taskList') }">
+            <NIcon :size="14"><CheckboxOutline /></NIcon>
+          </button>
+        </template>
+        {{ t('editor.toolbar.taskList') }}
+      </NTooltip>
       <span class="tool-divider"></span>
-      <button class="tool-btn" @click="editor.chain().focus().toggleBlockquote().run()" :class="{ active: editor.isActive('blockquote') }">
-        <NIcon :size="14"><TextOutline /></NIcon>
-      </button>
-      <button class="tool-btn" @click="editor.chain().focus().toggleCodeBlock().run()" :class="{ active: editor.isActive('codeBlock') }">
-        <NIcon :size="14"><CodeOutline /></NIcon>
-      </button>
+      <NTooltip :show-arrow="false" trigger="hover">
+        <template #trigger>
+          <button class="tool-btn" @click="editor.chain().focus().toggleBlockquote().run()" :class="{ active: editor.isActive('blockquote') }">
+            <NIcon :size="14"><TextOutline /></NIcon>
+          </button>
+        </template>
+        {{ t('editor.toolbar.blockquote') }}
+      </NTooltip>
+      <NTooltip :show-arrow="false" trigger="hover">
+        <template #trigger>
+          <button class="tool-btn" @click="editor.chain().focus().toggleCodeBlock().run()" :class="{ active: editor.isActive('codeBlock') }">
+            <NIcon :size="14"><CodeOutline /></NIcon>
+          </button>
+        </template>
+        {{ t('editor.toolbar.codeBlock') }}
+      </NTooltip>
       <span class="tool-divider"></span>
-      <button class="tool-btn" @click="editor.chain().focus().setTextAlign('left').run()">L</button>
-      <button class="tool-btn" @click="editor.chain().focus().setTextAlign('center').run()">C</button>
-      <button class="tool-btn" @click="editor.chain().focus().setTextAlign('right').run()">R</button>
+      <NTooltip :show-arrow="false" trigger="hover">
+        <template #trigger>
+          <button class="tool-btn" @click="editor.chain().focus().setTextAlign('left').run()">L</button>
+        </template>
+        {{ t('editor.toolbar.alignLeft') }}
+      </NTooltip>
+      <NTooltip :show-arrow="false" trigger="hover">
+        <template #trigger>
+          <button class="tool-btn" @click="editor.chain().focus().setTextAlign('center').run()">C</button>
+        </template>
+        {{ t('editor.toolbar.alignCenter') }}
+      </NTooltip>
+      <NTooltip :show-arrow="false" trigger="hover">
+        <template #trigger>
+          <button class="tool-btn" @click="editor.chain().focus().setTextAlign('right').run()">R</button>
+        </template>
+        {{ t('editor.toolbar.alignRight') }}
+      </NTooltip>
       <span class="tool-divider"></span>
-      <button class="tool-btn" @click="setLink" :class="{ active: editor.isActive('link') }">
-        <NIcon :size="14"><LinkOutline /></NIcon>
-      </button>
-      <button class="tool-btn" @click="addImage">
-        <NIcon :size="14"><ImageOutline /></NIcon>
-      </button>
-      <button class="tool-btn" @click="editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()">
-        <NIcon :size="14"><GridOutline /></NIcon>
-      </button>
+      <NTooltip :show-arrow="false" trigger="hover">
+        <template #trigger>
+          <button class="tool-btn" @click="setLink" :class="{ active: editor.isActive('link') }">
+            <NIcon :size="14"><LinkOutline /></NIcon>
+          </button>
+        </template>
+        {{ t('editor.toolbar.link') }}
+      </NTooltip>
+      <NTooltip :show-arrow="false" trigger="hover">
+        <template #trigger>
+          <button class="tool-btn" @click="addImage">
+            <NIcon :size="14"><ImageOutline /></NIcon>
+          </button>
+        </template>
+        {{ t('editor.toolbar.image') }}
+      </NTooltip>
+      <NTooltip :show-arrow="false" trigger="hover">
+        <template #trigger>
+          <button class="tool-btn" @click="editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()">
+            <NIcon :size="14"><GridOutline /></NIcon>
+          </button>
+        </template>
+        {{ t('editor.toolbar.table') }}
+      </NTooltip>
       <span class="tool-divider"></span>
-      <button class="tool-btn" @click="editor.chain().focus().undo().run()">
-        <NIcon :size="14"><ArrowUndoOutline /></NIcon>
-      </button>
-      <button class="tool-btn" @click="editor.chain().focus().redo().run()">
-        <NIcon :size="14"><ArrowRedoOutline /></NIcon>
-      </button>
+      <NTooltip :show-arrow="false" trigger="hover">
+        <template #trigger>
+          <button class="tool-btn" @click="editor.chain().focus().undo().run()">
+            <NIcon :size="14"><ArrowUndoOutline /></NIcon>
+          </button>
+        </template>
+        {{ t('editor.toolbar.undo') }}
+      </NTooltip>
+      <NTooltip :show-arrow="false" trigger="hover">
+        <template #trigger>
+          <button class="tool-btn" @click="editor.chain().focus().redo().run()">
+            <NIcon :size="14"><ArrowRedoOutline /></NIcon>
+          </button>
+        </template>
+        {{ t('editor.toolbar.redo') }}
+      </NTooltip>
     </div>
     <EditorContent :editor="editor" class="tiptap-editor" />
   </div>
@@ -186,7 +284,7 @@ function addImage(): void {
 
 .toolbar {
   position: sticky;
-  top: 48px;
+  top: 0px;
   z-index: 10;
   display: flex;
   align-items: center;

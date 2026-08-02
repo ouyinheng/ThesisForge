@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { NConfigProvider, NMessageProvider } from 'naive-ui'
 import { useLayout } from '@/composables/useLayout'
 import { useNaiveTheme } from '@/theme/naive-theme'
@@ -7,6 +7,8 @@ import { useRoute } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
 import AppSidebar from '@/components/AppSidebar.vue'
 import SettingsModal from '@/components/SettingsModal.vue'
+import IframeModal from '@/components/IframeModal.vue'
+import { openInIframe } from '@/composables/useExternalLink'
 import { isDesktop } from '@/services/storage'
 
 const { currentLayout } = useLayout()
@@ -51,6 +53,30 @@ if (typeof window !== 'undefined') {
     showSettings.value = true
   })
 }
+
+// 全局拦截：所有 external 链接（hostname !== 当前）统一在 iframe 打开
+function interceptExternalLinks(e: MouseEvent): void {
+  const target = e.target as HTMLElement | null
+  if (!target) return
+  const anchor = target.closest('a[href]') as HTMLAnchorElement | null
+  if (!anchor) return
+  try {
+    const linkUrl = new URL(anchor.href, window.location.origin)
+    if (linkUrl.hostname && linkUrl.hostname !== window.location.hostname) {
+      e.preventDefault()
+      openInIframe(linkUrl.href, anchor.textContent?.trim() || linkUrl.hostname)
+    }
+  } catch {
+    // 忽略无效 URL
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', interceptExternalLinks, true)
+})
+onUnmounted(() => {
+  document.removeEventListener('click', interceptExternalLinks, true)
+})
 </script>
 
 <template>
@@ -78,6 +104,7 @@ if (typeof window !== 'undefined') {
       </div>
 
       <SettingsModal v-model:show="showSettings" />
+      <IframeModal />
     </NMessageProvider>
   </NConfigProvider>
 </template>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, h } from 'vue'
+import { ref, computed, onMounted, watch, h, nextTick, createApp } from 'vue'
+import { openInIframe } from '@/composables/useExternalLink'
 import {
   NButton,
   NText,
@@ -9,12 +10,15 @@ import {
   NSkeleton,
   NDivider,
   NEmpty,
+  NImageGroup,
+  NBackTop,
   useMessage,
 } from 'naive-ui'
 import {
   ArrowBackOutline,
   BookmarkOutline,
   ListOutline,
+  CopyOutline,
 } from '@vicons/ionicons5'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
@@ -35,6 +39,119 @@ const loading = ref(false)
 const notFound = ref(false)
 const article = ref<JuejinArticle | null>(null)
 const saving = ref(false)
+
+// 图片预览
+const previewVisible = ref(false)
+const previewImgs = ref<string[]>([])
+const previewIdx = ref(0)
+
+// "回到顶部" 监听滚动容器 ref
+const articlePageRef = ref<HTMLElement>()
+
+// 代码复制
+const copiedId = ref('')
+
+function renderIcon(icon: Component) {
+  return () => h(NIcon, null, { default: () => h(icon) })
+}
+
+// 将 Naive UI Icon 渲染为 SVG 字符串（预计算一次）
+let iconSvg = ''
+function ensureIconSvg(): string {
+  if (iconSvg) return iconSvg
+  const tmp = document.createElement('div')
+  tmp.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden'
+  document.body.appendChild(tmp)
+  const app = createApp({ render: () => h(NIcon, { size: 14, component: CopyOutline }) })
+  const host = document.createElement('span')
+  tmp.appendChild(host)
+  app.mount(host)
+  iconSvg = host.innerHTML
+  app.unmount()
+  document.body.removeChild(tmp)
+  return iconSvg
+}
+
+// 正文渲染完成后预制交互（图片预览 + 代码复制）
+function setupContentInteractions(rootEl: HTMLElement | null): void {
+  if (!rootEl) return
+  // 收集所有图片
+  const imgs = Array.from(rootEl.querySelectorAll('img'))
+  previewImgs.value = imgs.map((img) => img.src)
+  imgs.forEach((img, i) => {
+    img.style.cursor = 'zoom-in'
+    img.onclick = () => {
+      previewIdx.value = i
+      previewVisible.value = true
+    }
+  })
+
+  // 为代码块添加复制按钮（仅当不存在时插入）
+  const pres = Array.from(rootEl.querySelectorAll('pre'))
+  pres.forEach((pre, idx) => {
+    if (pre.querySelector(':scope > .code-copy-btn')) return
+    if (getComputedStyle(pre).position === 'static') {
+      pre.style.position = 'relative'
+    }
+    const id = `jcode-${idx}-${(pre.textContent ?? '').length}`
+    const btn = document.createElement('button')
+    btn.className = 'code-copy-btn'
+    btn.dataset.copiedId = id
+    btn.type = 'button'
+    btn.title = '复制代码'
+    btn.innerHTML = ensureIconSvg()
+    btn.onclick = (e) => {
+      e.stopPropagation()
+      copyCode(pre.textContent ?? '', id)
+    }
+    pre.appendChild(btn)
+  })
+}
+
+// 复制代码块
+async function copyCode(code: string, id: string): Promise<void> {
+  let ok = false
+  try {
+    await navigator.clipboard.writeText(code)
+    ok = true
+  } catch {
+    try {
+      const ta = document.createElement('textarea')
+      ta.value = code
+      ta.style.position = 'fixed'
+      ta.style.opacity = '0'
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
+      ok = true
+    } catch {
+      // ignore
+    }
+  }
+  if (!ok) {
+    message?.error?.('复制失败')
+    return
+  }
+  copiedId.value = id
+  const btn = document.querySelector(`button.code-copy-btn[data-copied-id="${id}"]`)
+  if (btn) {
+    btn.setAttribute('data-copied', 'true')
+    // 将对勾图标注入
+    const svg = btn.querySelector('svg')
+    if (svg) {
+      svg.outerHTML = `<svg viewBox="0 0 512 512" width="14" height="14" fill="none" stroke="currentColor" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"><path d="M416 128L192 384l-96-96"/></svg>`
+    }
+  }
+  setTimeout(() => {
+    copiedId.value = ''
+    if (btn) {
+      btn.removeAttribute('data-copied')
+      const svg = btn.querySelector('svg')
+      if (svg) svg.outerHTML = ensureIconSvg()
+    }
+  }, 1600)
+}
 
 // 大纲面板
 const showOutline = ref(false)
@@ -106,6 +223,10 @@ async function load(): Promise<void> {
     // 有完整正文缓存且已清理，直接返回
     if (cached.web_html_content) {
       loading.value = false
+      nextTick(() => {
+        const el = document.querySelector('.article-content') as HTMLElement | null
+        setupContentInteractions(el)
+      })
       return
     }
   }
@@ -137,6 +258,10 @@ async function load(): Promise<void> {
         tags: [],
       }
     }
+    nextTick(() => {
+      const el = document.querySelector('.article-content') as HTMLElement | null
+      setupContentInteractions(el)
+    })
   } catch {
     if (!article.value) notFound.value = true
   } finally {
@@ -158,8 +283,8 @@ function formatCount(n: number): string {
   return String(n)
 }
 
-function renderIcon(icon: Component) {
-  return () => h(NIcon, null, { default: () => h(icon) })
+function openOriginalArticle(id: string): void {
+  openInIframe(`https://juejin.cn/post/${id}`, '掘金原文')
 }
 
 // 保存为本地文章（标注来源掘金）
@@ -190,7 +315,7 @@ watch(articleId, load)
 </script>
 
 <template>
-  <div class="juejin-article">
+  <div ref="articlePageRef" class="juejin-article">
     <!-- 大纲浮动按钮 -->
     <button
       v-if="headings.length > 0"
@@ -270,19 +395,37 @@ watch(articleId, load)
         <NSkeleton height="16px" width="60%" :sharp="false" />
       </div>
 
-      <div v-else-if="article.web_html_content" class="article-content" v-html="article.web_html_content"></div>
+      <n-image-group
+        v-if="article.web_html_content"
+        v-model:show="previewVisible"
+        v-model:current="previewIdx"
+        :src-list="previewImgs"
+        :show-toolbar="true"
+        style="display: contents"
+      >
+        <div class="article-content" v-html="article.web_html_content"></div>
+      </n-image-group>
       <div v-else class="article-preview">
         <p class="preview-brief">{{ article.brief_content || '（暂无正文预览）' }}</p>
         <NButton
           type="primary"
           size="small"
-          @click="window.open('https://juejin.cn/post/' + article.article_id, '_blank', 'noopener')"
+          @click="openOriginalArticle(article.article_id)"
         >
           在掘金查看原文 ↗
         </NButton>
       </div>
     </div>
+
+    <!-- NImageGroup 会渲染预览，无需额外 DOM -->
   </div>
+
+  <n-back-top
+    :listen-to="articlePageRef"
+    :right="32"
+    :bottom="40"
+    :visibility-height="300"
+  />
 </template>
 
 <style lang="less" scoped>
@@ -406,4 +549,55 @@ watch(articleId, load)
   color: var(--color-text-secondary);
   white-space: pre-wrap;
 }
+
+/* 正文内部：让复制按钮 hover 显示 */
+.article-content {
+  :deep(pre) {
+    border-radius: 8px;
+
+    &:hover .code-copy-btn {
+      opacity: 1;
+    }
+  }
+
+  :deep(.code-copy-btn) {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    height: 28px;
+    padding: 0 10px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.92);
+    color: #4b5563;
+    font-size: 12px;
+    font-family: var(--font-sans);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s, background 0.2s, color 0.2s, border-color 0.2s;
+    z-index: 2;
+    backdrop-filter: blur(4px);
+
+    svg {
+      flex-shrink: 0;
+      width: 14px;
+      height: 14px;
+    }
+
+    &[data-copied='true'] {
+      color: #18a058;
+      border-color: #18a058;
+      background: rgba(24, 160, 88, 0.12);
+    }
+
+    &:hover {
+      background: #fff;
+      color: #1f2937;
+    }
+  }
+}
+
 </style>

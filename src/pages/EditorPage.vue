@@ -242,6 +242,9 @@ function openSettings(): void {
 }
 
 .summary-textarea {
+  :deep(&.n-input .n-input-wrapper) {
+    background-color: var(--color-bg-secondary);
+  }
   :deep(.n-input__textarea-el) {
     background: var(--color-bg-secondary);
     border-radius: var(--radius-sm);

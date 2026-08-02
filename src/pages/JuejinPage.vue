@@ -8,8 +8,10 @@ import {
   NTabPane,
   NEmpty,
   NSkeleton,
+  NInput,
+  NBackTop,
 } from 'naive-ui'
-import { RefreshOutline } from '@vicons/ionicons5'
+import { RefreshOutline, SearchOutline, CloseCircleOutline } from '@vicons/ionicons5'
 import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { putJuejinArticle, type JuejinArticle } from '@/services/juejinCache'
@@ -28,15 +30,21 @@ const currentFeed = computed(() =>
 )
 
 // 是否应显示无限滚动哨兵
-const showSentinel = computed(() =>
-  currentFeed.value.list.length > 0 && !currentFeed.value.finished
-)
+const showSentinel = computed(() => {
+  if (isSearchMode.value) {
+    return juejinStore.search.list.length > 0 && !juejinStore.search.finished
+  }
+  return currentFeed.value.list.length > 0 && !currentFeed.value.finished
+})
 
 // loading / error 用 ref 单独管理（响应式）
 const recommendLoading = ref(false)
 const latestLoading = ref(false)
 const recommendError = ref(false)
 const latestError = ref(false)
+
+// 回到顶部的滚动容器 ref
+const juejinPageRef = ref<HTMLElement>()
 
 function getLoading(tab: 'recommend' | 'latest') {
   return tab === 'recommend' ? recommendLoading.value : latestLoading.value
@@ -53,25 +61,125 @@ function setError(tab: 'recommend' | 'latest', val: boolean) {
   else latestError.value = val
 }
 
+// ---- 搜索 ----
+const searchKeyword = ref('')
+const isSearchMode = computed(() => juejinStore.search.keyword.length > 0)
+
+function performSearch(): void {
+  const kw = searchKeyword.value.trim()
+  if (!kw) {
+    exitSearch()
+    return
+  }
+  juejinStore.resetSearch()
+  juejinStore.search.keyword = kw
+  juejinStore.search.loading = true
+  juejinStore.search.error = false
+  searchJuejin({ keyword: kw, cursor: '0', limit: 20 })
+    .then((json) => {
+      if (json.err_no !== 0) throw new Error(json.err_msg || 'err')
+      const items: JuejinArticle[] = (json.data || []).map((it: any) => mapItem({ item_info: it.result_model }))
+      const hasMore = json.has_more === 1 || json.has_more === true
+      juejinStore.appendSearch(items, json.cursor || '', hasMore)
+    })
+    .catch(() => {
+      juejinStore.search.error = true
+    })
+    .finally(() => {
+      juejinStore.search.loading = false
+    })
+}
+
+function loadMoreSearch(): Promise<void> {
+  const s = juejinStore.search
+  if (s.loading || s.finished || !s.keyword) return Promise.resolve()
+  s.loading = true
+  s.error = false
+  return searchJuejin({ keyword: s.keyword, cursor: s.cursor, limit: 20 })
+    .then((json) => {
+      if (json.err_no !== 0) throw new Error(json.err_msg || 'err')
+      const items: JuejinArticle[] = (json.data || []).map((it: any) => mapItem({ item_info: it.result_model }))
+      const hasMore = json.has_more === 1 || json.has_more === true
+      juejinStore.appendSearch(items, json.cursor || '', hasMore)
+    })
+    .catch(() => {
+      s.error = true
+    })
+    .finally(() => {
+      s.loading = false
+    })
+}
+
+function exitSearch(): void {
+  searchKeyword.value = ''
+  juejinStore.resetSearch()
+}
+
 const isElectron = typeof window !== 'undefined' && (window as any).__IS_ELECTRON__ === true
 const JUEJIN_API_BASE = import.meta.env.VITE_JUEJIN_API_BASE || 'https://api.juejin.cn'
 const RECOMMEND_URL =
   'https://api.juejin.cn/recommend_api/v1/article/recommend_all_feed?aid=2608&uuid=7204388692608828987&spider=0'
 
 async function requestJuejin(url: string, body: Record<string, unknown>): Promise<any> {
+  return requestJuejinGeneric({ url, method: 'POST', body })
+}
+
+interface RequestOptions {
+  url: string
+  method: 'POST' | 'GET'
+  body?: Record<string, unknown>
+  params?: Record<string, string | number>
+}
+
+async function requestJuejinGeneric(opts: RequestOptions): Promise<any> {
+  let fullUrl = opts.url
+  if (opts.params) {
+    const searchParams = new URLSearchParams()
+    for (const [k, v] of Object.entries(opts.params)) searchParams.set(k, String(v))
+    const sep = fullUrl.includes('?') ? '&' : '?'
+    fullUrl = fullUrl + sep + searchParams.toString()
+  }
   if (isElectron && (window as any).__fileBridge?.juejinFetch) {
-    const result = await (window as any).__fileBridge.juejinFetch({ url, method: 'POST', body })
+    const result = await (window as any).__fileBridge.juejinFetch({
+      url: fullUrl,
+      method: opts.method,
+      body: opts.body,
+    })
     if (!result.ok) throw new Error(result.error || 'fetch failed')
     return result.data
   }
-  const target = JUEJIN_API_BASE + url.replace('https://api.juejin.cn', '')
-  const resp = await fetch(target, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  })
+  const target = JUEJIN_API_BASE + fullUrl.replace('https://api.juejin.cn', '')
+  const fetchOpts: RequestInit = { method: opts.method }
+  if (opts.method === 'POST') {
+    fetchOpts.headers = { 'Content-Type': 'application/json' }
+    fetchOpts.body = JSON.stringify(opts.body)
+  }
+  const resp = await fetch(target, fetchOpts)
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
   return resp.json()
+}
+
+async function searchJuejin(params: {
+  keyword: string
+  cursor: string
+  limit: number
+}): Promise<any> {
+  return requestJuejinGeneric({
+    url: 'https://api.juejin.cn/search_api/v1/search',
+    method: 'GET',
+    params: {
+      aid: 2608,
+      uuid: '7204388692608828987',
+      spider: 0,
+      query: params.keyword,
+      id_type: 0,
+      cursor: params.cursor,
+      limit: params.limit,
+      search_type: 0,
+      sort_type: 0,
+      version: 1,
+    },
+  })
 }
 
 function mapItem(item: any): JuejinArticle {
@@ -160,7 +268,8 @@ function setupObserver(): void {
     (entries) => {
       for (const entry of entries) {
         if (entry.isIntersecting) {
-          loadMore(activeTab.value)
+          if (isSearchMode.value) loadMoreSearch()
+          else loadMore(activeTab.value)
           break
         }
       }
@@ -199,7 +308,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="juejin-page">
+  <div ref="juejinPageRef" class="juejin-page">
     <NCard :bordered="false" class="page-card">
       <!-- 顶部品牌 -->
       <div class="juejin-header">
@@ -212,7 +321,7 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <!-- Tabs + 刷新按钮 -->
+      <!-- Tabs + 搜索框 + 刷新按钮 -->
       <div class="juejin-tabs-bar">
         <NTabs
           type="line"
@@ -222,30 +331,75 @@ onBeforeUnmount(() => {
         >
           <!-- 推荐 -->
           <NTabPane name="recommend" :tab="t('juejin.recommend')">
+            <!-- 搜索中的结果头部 -->
+            <div v-if="isSearchMode" class="search-banner">
+              <span class="search-banner-text">
+                <NIcon :size="14" :component="SearchOutline" />
+                搜索 "<strong>{{ juejinStore.search.keyword }}</strong>" · 共 {{ juejinStore.search.list.length }} 条
+              </span>
+              <NButton text size="small" @click="exitSearch">
+                <template #icon><NIcon :component="CloseCircleOutline" /></template>
+                退出搜索
+              </NButton>
+            </div>
             <div class="list-wrap">
+              <!-- 搜索错误提示 -->
               <NEmpty
-                v-if="getError('recommend') && !juejinStore.recommend.list.length"
-                description="加载失败（可能受跨域限制）"
+                v-if="juejinStore.search.error && !juejinStore.search.list.length"
+                description="搜索失败（可能受跨域限制）"
               >
                 <template #extra>
-                  <NButton size="small" @click="loadMore('recommend')">重试</NButton>
+                  <NButton size="small" @click="performSearch">重试</NButton>
                 </template>
               </NEmpty>
-
-              <div v-else class="waterfall">
+              <!-- 搜索空结果 -->
+              <NEmpty
+                v-else-if="!juejinStore.search.loading && juejinStore.search.finished && !juejinStore.search.list.length && isSearchMode"
+                description="暂无搜索结果"
+              />
+              <!-- 搜索瀑布流 -->
+              <div v-else-if="isSearchMode && juejinStore.search.list.length" class="waterfall">
                 <span
-                  v-for="article in juejinStore.recommend.list"
-                  :key="article.article_id"
+                  v-for="article in juejinStore.search.list"
+                  :key="'search-' + article.article_id"
                   class="waterfall-item"
                 >
                   <JuejinCard :article="article" @click="openArticle(article)" />
                 </span>
               </div>
+              <!-- 搜索 loading 行 -->
+              <div v-if="isSearchMode && juejinStore.search.loading && !juejinStore.search.list.length" class="search-init-loading">
+                <NSkeleton height="16px" width="200px" :sharp="false" />
+              </div>
 
-              <div class="list-footer" v-if="getLoading('recommend')">
+              <!-- 默认推荐瀑布流 (非搜索模式) -->
+              <template v-if="!isSearchMode">
+                <NEmpty
+                  v-if="getError('recommend') && !juejinStore.recommend.list.length"
+                  description="加载失败（可能受跨域限制）"
+                >
+                  <template #extra>
+                    <NButton size="small" @click="loadMore('recommend')">重试</NButton>
+                  </template>
+                </NEmpty>
+                <div v-else class="waterfall">
+                  <span
+                    v-for="article in juejinStore.recommend.list"
+                    :key="article.article_id"
+                    class="waterfall-item"
+                  >
+                    <JuejinCard :article="article" @click="openArticle(article)" />
+                  </span>
+                </div>
+              </template>
+
+              <!-- loading -->
+              <div class="list-footer" v-if="(getLoading('recommend') && !isSearchMode) || (isSearchMode && juejinStore.search.loading && juejinStore.search.list.length)">
                 <NSkeleton height="16px" width="120px" :sharp="false" />
               </div>
-              <NEmpty v-else-if="juejinStore.recommend.finished && juejinStore.recommend.list.length" :show-icon="false" description="没有更多了" />
+              <!-- 没有更多了 -->
+              <NEmpty v-else-if="!isSearchMode && juejinStore.recommend.finished && juejinStore.recommend.list.length" :show-icon="false" description="没有更多了" />
+              <NEmpty v-else-if="isSearchMode && juejinStore.search.finished && juejinStore.search.list.length" :show-icon="false" description="没有更多了" />
             </div>
           </NTabPane>
 
@@ -278,6 +432,21 @@ onBeforeUnmount(() => {
             </div>
           </NTabPane>
           <template #suffix>
+            <!-- 搜索框（位于刷新按钮左侧） -->
+            <NInput
+              class="search-input"
+              clearable
+              round
+              size="small"
+              placeholder="搜索掘金文章..."
+              v-model:value="searchKeyword"
+              @keyup.enter="performSearch"
+              @clear="exitSearch"
+            >
+              <template #prefix>
+                <NIcon :size="14" :component="SearchOutline" />
+              </template>
+            </NInput>
             <!-- 刷新按钮 -->
             <NButton quaternary circle size="small" class="refresh-btn" @click="refreshCurrent" title="刷新">
               <NIcon :size="16"><RefreshOutline /></NIcon>
@@ -291,6 +460,8 @@ onBeforeUnmount(() => {
       <div ref="sentinelEl" class="sentinel" v-if="showSentinel"></div>
     </NCard>
   </div>
+
+  <n-back-top :listen-to="juejinPageRef" :right="32" :bottom="40" :visibility-height="300" />
 </template>
 
 <style lang="less" scoped>
@@ -383,6 +554,46 @@ onBeforeUnmount(() => {
   &:hover {
     color: var(--color-primary);
   }
+}
+
+/* 搜索框 */
+.search-input {
+  width: 220px;
+  flex-shrink: 0;
+  align-self: center;
+  margin-right: 0.5em;
+
+  :deep(.n-input__prefix) {
+    margin-right: 4px;
+  }
+}
+
+/* 搜索结果头部 */
+.search-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4em 0.2em 0.8em;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 1em;
+}
+
+.search-banner-text {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+
+  strong {
+    color: var(--color-primary);
+  }
+}
+
+.search-init-loading {
+  display: flex;
+  justify-content: center;
+  padding: 1em 0;
 }
 
 .list-wrap {

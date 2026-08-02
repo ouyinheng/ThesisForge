@@ -1,6 +1,6 @@
 # PaperBlog — 学术论文风格博客系统
 
-简约、专业的个人学术论文发布平台。支持文章管理、富文本编辑、双主题切换、布局切换、中英文国际化，数据持久化存储。未来计划支持 Electron 桌面端。
+简约、专业的个人学术论文发布平台。支持文章管理、富文本编辑、双主题切换、布局切换、中英文国际化，数据持久化存储。内置掘金技术社区阅读器。未来计划支持 Electron 桌面端。
 
 ---
 
@@ -44,10 +44,40 @@ yarn build:electron
 | 状态管理 | Pinia |
 | 路由 | Vue Router (Hash 模式) |
 | 构建工具 | Vite 5 |
+| UI 组件库 | Naive UI |
 | CSS 方案 | UnoCSS + Less |
 | 富文本编辑 | Tiptap 2 |
 | 代码高亮 | Lowlight |
-| 图标 | Iconify (Carbon) |
+| 图标 | Iconify (Carbon) + @vicons/ionicons5 |
+
+### UI 库说明
+
+**Naive UI** — 项目使用 Naive UI 作为核心 UI 组件库，主要使用到的组件包括：
+
+- `NConfigProvider` — 全局配置与主题覆盖
+- `NMessageProvider` — 消息提示上下文
+- `NInput` — 搜索框
+- `NButton` — 按钮
+- `NIcon` — 图标容器
+- `NImageGroup` — 图片预览分组（掘金文章图片查看）
+- `NBackTop` — 回到顶部浮动按钮
+- `NTabs` / `NTabPane` — 标签页（掘金列表分类）
+- `NSpin` — 加载指示器
+- `NCard` — 卡片容器
+- `NSelect` — 选择器
+
+Naive UI 的主题系统通过 `themeOverrides` 进行自定义，与项目的双主题（亮/暗）体系配合使用。
+
+### 图标说明
+
+**@vicons/ionicons5** — 项目使用 Ionicons v5 图标集（通过 `@vicons/ionicons5` 包引入），主要用于掘金模块的功能图标：
+
+- `CloseOutline` — 关闭按钮
+- `RefreshOutline` — 刷新按钮
+- `OpenOutline` — 新标签页打开
+- `CopyOutline` — 复制代码
+
+图标通过 `NIcon` 组件包装使用：`<NIcon :component="RefreshOutline" />`。其余页面图标仍使用 Iconify Carbon 系列。
 
 ---
 
@@ -71,25 +101,35 @@ PaperBlog/
     ├── main.ts                 # Vue 应用入口
     ├── env.d.ts                 # 环境类型声明 (全局类型)
     ├── types/index.ts           # 全局共享类型 (Article/Electron 等)
-    ├── App.vue                  # 根组件 (布局切换: sidebar/topbar)
+    ├── App.vue                  # 根组件 (布局切换: sidebar/topbar + 全局 iframe 拦截 + IframeModal)
     ├── router/index.ts          # 路由配置 (Hash 模式)
+    ├── theme/
+    │   └── naive-theme.ts       # Naive UI 主题自定义
     ├── services/
-    │   └── storage.ts           # ⚠️ 统一存储服务层 (Web/Electron 唯一改动点)
+    │   ├── storage.ts           # ⚠️ 统一存储服务层 (Web/Electron 唯一改动点)
+    │   └── juejinContent.ts     # 掘金文章正文获取（API + 页面抓取 + body 回退三策略）
     ├── stores/
-    │   └── blog.ts              # Pinia 文章数据管理
+    │   ├── blog.ts              # Pinia 文章数据管理
+    │   └── juejin.ts            # Pinia 掘金数据管理（列表/搜索缓存）
     ├── composables/
     │   ├── useTheme.ts          # 主题切换 composable
     │   ├── useLayout.ts         # 布局切换 composable
-    │   └── useI18n.ts           # 国际化 composable (中/英)
+    │   ├── useI18n.ts           # 国际化 composable (中/英)
+    │   └── useExternalLink.ts   # 全局外部链接 iframe 管理
     ├── components/
     │   ├── AppHeader.vue        # 顶部导航栏
     │   ├── AppSidebar.vue       # 侧边栏导航
+    │   ├── IframeModal.vue      # 全局 iframe 弹窗（外部链接查看器）
+    │   ├── JuejinCard.vue       # 掘金文章卡片组件
+    │   ├── SettingsModal.vue    # 设置弹窗
     │   └── TiptapEditor.vue     # 富文本编辑器封装
     ├── pages/
     │   ├── HomePage.vue         # 首页 (论文列表)
     │   ├── ArticlePage.vue      # 论文详情/阅读
     │   ├── EditorPage.vue       # 编辑器 (创建/编辑)
-    │   └── AboutPage.vue        # 关于页面
+    │   ├── AboutPage.vue        # 关于页面
+    │   ├── JuejinPage.vue       # 掘金社区阅读列表（瀑布流 + 搜索）
+    │   └── JuejinArticlePage.vue # 掘金文章详情（图片预览 + 复制代码）
     └── styles/
         └── main.less            # 全局样式 (CSS 变量 + 双主题)
 ```
@@ -181,6 +221,42 @@ interface Article {
 | `/editor` | EditorPage | 创建新论文 |
 | `/editor/:id` | EditorPage | 编辑已有论文 |
 | `/about` | AboutPage | 关于页面 |
+| `/juejin` | JuejinPage | 掘金社区（瀑布流推荐/最新列表 + 搜索 + 无限滚动） |
+| `/juejin/:id` | JuejinArticlePage | 掘金文章详情（图片预览 + 代码复制 + iframe 查看原文） |
+
+---
+
+## 掘金模块
+
+项目内置掘金技术社区阅读器，可直接浏览推荐/最新文章、搜索关键词、查看文章内容。
+
+### 主要功能
+
+- **瀑布流布局** — 使用 CSS `column-count` 实现双列瀑布流
+- **搜索** — 关键词搜索，支持游标分页
+- **无限滚动** — `IntersectionObserver` + sentinel 实现滚动加载
+- **图片预览** — Naive UI `n-image-group` + `v-model:show` / `v-model:current`
+- **代码复制** — 鼠标悬停代码块右上角显示复制按钮
+- **外部链接** — 全局所有外链统一在 iframe 弹窗中打开（`IframeModal` + `useExternalLink`）
+- **回到顶部** — `NBackTop` 浮动按钮
+
+### 核心文件
+
+| 文件 | 说明 |
+|------|------|
+| `src/pages/JuejinPage.vue` | 掘金列表页（瀑布流 + 搜索 + NBackTop） |
+| `src/pages/JuejinArticlePage.vue` | 掘金文章详情页（NImageGroup 预览 + 代码复制 + NBackTop） |
+| `src/components/JuejinCard.vue` | 掘金文章卡片组件 |
+| `src/stores/juejin.ts` | Pinia store（列表数据 + 搜索缓存） |
+| `src/services/juejinContent.ts` | 文章内容获取（API → 页面抓取 → body 回退） |
+| `src/composables/useExternalLink.ts` | 全局 iframe 弹窗状态管理 |
+| `src/components/IframeModal.vue` | 全局 iframe 弹窗组件 |
+
+### 文章内容获取策略（三重回退）
+
+1. **官方 API** — 调用 `content_api/v1/article/detail` 获取 `article_info.content`
+2. **页面抓取** — 抓取文章页 HTML，提取 `.article-viewer` / `.markdown-body` / `<article>` 内容
+3. **全文 body** — 兜底方案，提取 `<body>` 中去除导航/页脚后的全部内容（`DOMParser` 清洗）
 
 ---
 
@@ -210,10 +286,39 @@ interface Article {
 - [x] 标签筛选
 - [x] 数据持久化（localStorage / 未来 Electron 文件系统）
 - [x] 预置示例数据（首次访问加载 3 篇经典论文）
-- [ ] 搜索功能
+- [x] 掘金社区阅读器（瀑布流列表 + 搜索 + 图片预览 + 代码复制 + iframe 查看原文）
+- [ ] 自定义搜索功能
 - [ ] 标签管理（创建/重命名/合并）
 - [ ] Markdown 导入/导出
 - [ ] Electron 打包
+
+---
+
+## 依赖说明
+
+### 核心依赖
+
+| 包名 | 版本 | 说明 |
+|------|------|------|
+| `vue` | ^3.x | 前端框架 |
+| `pinia` | ^2.x | 状态管理 |
+| `vue-router` | ^4.x | 路由（Hash 模式） |
+| `naive-ui` | ^2.x | UI 组件库（全局配置、消息、卡片、标签页、图片预览、回到顶部等） |
+| `@vicons/ionicons5` | latest | Ionicons v5 图标集（掘金模块功能图标） |
+| `@tiptap/vue-3` + `@tiptap/starter-kit` | ^2.x | 富文本编辑器 |
+| `@tiptap/extension-lowlight` | ^2.x | 代码高亮扩展 |
+| `lowlight` | ^2.x | 代码语法高亮 |
+| `unocss` | ^0.x | 原子化 CSS |
+
+### 安装
+
+如需在类似项目中安装相同依赖：
+
+```bash
+yarn add naive-ui @vicons/ionicons5
+```
+
+Naive UI 需要在 `main.ts` 中按需引入或使用自动导入插件。本项目通过 `NConfigProvider` + `NMessageProvider` 包裹根组件，配合 `themeOverrides` 实现主题定制。
 
 ---
 
@@ -221,8 +326,10 @@ interface Article {
 
 1. **Hash 路由**：必须使用 `createWebHashHistory()`，确保静态部署和 Electron file:// 协议下路由正常
 2. **CSS 变量**：所有颜色必须通过 CSS 自定义属性，不能在组件中硬编码色值
-3. **UnoCSS 图标**：使用 `i-carbon:xxx` 格式引用 Carbon 图标
-4. **Tailwind 冲突**：`tailwind.config.js` 必须设置 `corePlugins: { preflight: false }`
-5. **异步存储**：storage.js 所有方法返回 Promise，调用请使用 `await`
-6. **数据初始化**：`main.js` 中使用 `await blogStore.loadArticles()` 后再 mount 应用
-7. **组件命名**：Vue 组件 PascalCase，composable camelCase + `use` 前缀
+3. **UnoCSS 图标**：使用 `i-carbon:xxx` 格式引用 Carbon 图标；掘金模块使用 `@vicons/ionicons5` 通过 `<NIcon :component="..." />` 包装
+4. **Naive UI 主题**：通过 `useNaiveTheme()` composable 提供 `themeOverrides`，确保组件主题与项目的双主题系统一致
+5. **Tailwind 冲突**：`tailwind.config.js` 必须设置 `corePlugins: { preflight: false }`
+6. **异步存储**：storage.js 所有方法返回 Promise，调用请使用 `await`
+7. **数据初始化**：`main.js` 中使用 `await blogStore.loadArticles()` 后再 mount 应用
+8. **组件命名**：Vue 组件 PascalCase，composable camelCase + `use` 前缀
+9. **全局外链拦截**：`App.vue` 中通过捕获阶段点击监听器统一将外部域名链接在 iframe 弹窗（`IframeModal`）中打开，禁止直接修改 `window.location`
