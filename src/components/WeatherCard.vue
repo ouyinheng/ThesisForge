@@ -1,66 +1,71 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { NSpin, NText } from 'naive-ui'
-import { fetchWeather, getCurrentPosition, getWeatherByCity, WeatherData } from '@/services/weather'
-import { useSettingsStore } from '@/stores/settings'
+import { ref, onMounted } from "vue";
+import { NSpin, NText } from "naive-ui";
+import {
+  fetchWeather,
+  getCurrentPosition,
+  getWeatherByCity,
+  WeatherData
+} from "@/services/weather";
+import { useSettingsStore } from "@/stores/settings";
 
-const settings = useSettingsStore()
+const settings = useSettingsStore();
 
-const loading = ref(true)
-const weather = ref<WeatherData | null>(null)
+const loading = ref(true);
+const weather = ref<WeatherData | null>(null);
 
 const ICON_MAP: Record<string, string> = {
-  SunnyOutline: 'i-carbon-sun',
-  PartlySunnyOutline: 'i-carbon-partly-cloudy',
-  CloudOutline: 'i-carbon-cloud',
-  RainyOutline: 'i-carbon-rain',
-  SnowOutline: 'i-carbon-snow',
-  ThunderstormOutline: 'i-carbon-lightning',
-}
+  SunnyOutline: "i-carbon-sun",
+  PartlySunnyOutline: "i-carbon-partly-cloudy",
+  CloudOutline: "i-carbon-cloud",
+  RainyOutline: "i-carbon-rain",
+  SnowOutline: "i-carbon-snow",
+  ThunderstormOutline: "i-carbon-lightning"
+};
 
 function getIcon(iconName: string): string {
-  return ICON_MAP[iconName] || 'i-carbon-cloud'
+  return ICON_MAP[iconName] || "i-carbon-cloud";
 }
 
 async function load(silent = false) {
-  if (!silent) loading.value = true
+  if (!silent) loading.value = true;
   try {
-    const city = settings.weatherCity
+    const city = settings.weatherCity;
     if (city) {
-      weather.value = await getWeatherByCity(city)
+      weather.value = await getWeatherByCity(city);
     } else {
-      const pos = await getCurrentPosition()
-      const w = await fetchWeather(pos.lat, pos.lon)
-      w.city = ''
-      weather.value = w
+      const pos = await getCurrentPosition();
+      const w = await fetchWeather(pos.lat, pos.lon);
+      w.city = "";
+      weather.value = w;
     }
   } catch {
     try {
-      weather.value = await getWeatherByCity(settings.weatherCity || '长沙')
+      weather.value = await getWeatherByCity(settings.weatherCity || "长沙");
     } catch {
       // keep current data
     }
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
 function refresh() {
-  load(true)
+  load(true);
 }
 
 onMounted(() => {
-  load()
-})
+  load();
+});
 </script>
 
 <template>
   <div class="weather-mini" @click="refresh" title="点击刷新">
-    <template v-if="loading">
+    <!-- <template v-if="loading">
       <n-spin size="small" />
-    </template>
+    </template> -->
 
-    <template v-else-if="weather">
+    <template v-if="weather">
       <i :class="getIcon(weather.icon)" :style="{ fontSize: '28px', color: '#e0a800' }" />
       <div class="wm-info">
         <div class="wm-line1">

@@ -8,17 +8,43 @@ export interface TabItem {
   title: string
   key: string
   name: string
+  pinned: boolean  // 是否常驻（不可关闭）
 }
 
 const TAB_STORE_KEY = 'pb-open-tabs'
 const TAB_SHOW_KEY = 'pb-show-tabs'
 
+/** 常驻首页 tab */
+const HOME_TAB: TabItem = {
+  path: '/',
+  fullPath: '/',
+  title: '',
+  key: '/',
+  name: 'home',
+  pinned: true,
+}
+
 function loadTabs(): TabItem[] {
   try {
     const raw = localStorage.getItem(TAB_STORE_KEY)
-    if (raw) return JSON.parse(raw)
+    if (raw) {
+      const parsed: TabItem[] = JSON.parse(raw)
+      // 确保首页常驻在第一个
+      const hasHome = parsed.some(t => t.pinned)
+      if (!hasHome) {
+        parsed.unshift({ ...HOME_TAB, title: '' })
+      } else {
+        // 确保 home 在第一位
+        const homeIdx = parsed.findIndex(t => t.pinned)
+        if (homeIdx > 0) {
+          const [home] = parsed.splice(homeIdx, 1)
+          parsed.unshift(home)
+        }
+      }
+      return parsed
+    }
   } catch { /* ignore */ }
-  return []
+  return [{ ...HOME_TAB }]
 }
 
 function saveTabs(tabs: TabItem[]): void {
@@ -47,11 +73,10 @@ const TITLE_MAP_EN: Record<string, string> = {
   'about': 'About',
 }
 
-function getTitle(route: RouteLocationNormalized, locale: string): string {
+const routeTitle = (route: RouteLocationNormalized, locale: string): string => {
   const map = locale === 'en' ? TITLE_MAP_EN : TITLE_MAP
   const name = route.name as string
   if (name && map[name]) return map[name]
-  // fallback: 从 route.meta 取
   const metaTitle = route.meta?.title
   if (metaTitle) return String(metaTitle)
   return route.path
@@ -59,7 +84,7 @@ function getTitle(route: RouteLocationNormalized, locale: string): string {
 
 export const useTabsStore = defineStore('tabs', () => {
   const tabs = ref<TabItem[]>(loadTabs())
-  const activeKey = ref<string>(tabs.value[0]?.fullPath || '')
+  const activeKey = ref<string>(tabs.value[0]?.fullPath || '/')
   const showTabs = ref<boolean>(localStorage.getItem(TAB_SHOW_KEY) !== 'false')
 
   function syncActive(key: string): void {
@@ -69,15 +94,24 @@ export const useTabsStore = defineStore('tabs', () => {
   function addTab(route: RouteLocationNormalized, locale: string): void {
     const fullPath = route.fullPath
     const routeName = (route.name || fullPath) as string
+    // 首页已经在 tabs 中，跳过
+    if (fullPath === '/' || fullPath === '') {
+      // 更新 home tab title if needed
+      const homeTab = tabs.value.find(t => t.pinned)
+      if (homeTab) homeTab.title = routeTitle(route, locale)
+      activeKey.value = tabs.value[0].fullPath
+      return
+    }
     const exists = tabs.value.find(t => t.fullPath === fullPath)
-    const title = getTitle(route, locale)
     if (!exists) {
+      const title = routeTitle(route, locale)
       tabs.value.push({
         path: route.path,
         fullPath,
         title,
         key: fullPath,
         name: routeName,
+        pinned: false,
       })
     }
     activeKey.value = fullPath
@@ -87,16 +121,25 @@ export const useTabsStore = defineStore('tabs', () => {
   function closeTab(fullPath: string): void {
     const idx = tabs.value.findIndex(t => t.fullPath === fullPath)
     if (idx === -1) return
+    const tab = tabs.value[idx]
+    if (tab.pinned) return // 常驻 tab 不允许关闭
+
     tabs.value.splice(idx, 1)
     if (activeKey.value === fullPath) {
-      activeKey.value = tabs.value[Math.min(idx, tabs.value.length - 1)]?.fullPath || ''
+      activeKey.value = tabs.value[Math.min(idx, tabs.value.length - 1)]?.fullPath || '/'
     }
     saveTabs(tabs.value)
   }
 
   function closeOthers(fullPath: string): void {
-    const kept = tabs.value.find(t => t.fullPath === fullPath)
-    tabs.value = kept ? [kept] : []
+    // 关闭其他时保留所有 pinned
+    const pinnedTabs = tabs.value.filter(t => t.pinned)
+    const current = tabs.value.find(t => t.fullPath === fullPath)
+    if (current && !current.pinned) {
+      tabs.value = [...pinnedTabs, current]
+    } else {
+      tabs.value = pinnedTabs
+    }
     activeKey.value = fullPath
     saveTabs(tabs.value)
   }
@@ -104,9 +147,11 @@ export const useTabsStore = defineStore('tabs', () => {
   function closeLeft(fullPath: string): void {
     const idx = tabs.value.findIndex(t => t.fullPath === fullPath)
     if (idx <= 0) return
-    const removed = tabs.value.slice(0, idx)
-    tabs.value = tabs.value.slice(idx)
-    if (removed.some(t => t.fullPath === activeKey.value)) {
+    // 不能关闭 pinned 之前的
+    const pinnedBefore = tabs.value.slice(0, idx).filter(t => t.pinned)
+    const rest = tabs.value.slice(idx)
+    tabs.value = [...pinnedBefore, ...rest]
+    if (tabs.value.slice(0, idx).some(t => t.fullPath === activeKey.value) && !tabs.value.find(t => t.fullPath === activeKey.value)) {
       activeKey.value = fullPath
     }
     saveTabs(tabs.value)
@@ -128,7 +173,7 @@ export const useTabsStore = defineStore('tabs', () => {
     localStorage.setItem(TAB_SHOW_KEY, String(showTabs.value))
   }
 
-  // 计算属性：keep-alive include 用的组件名列表
+  // keep-alive include 用
   const cachedNames = computed(() => [...new Set(tabs.value.map(t => t.name))])
 
   return {

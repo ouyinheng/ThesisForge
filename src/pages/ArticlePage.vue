@@ -1,6 +1,6 @@
 <script setup lang="ts">
-defineOptions({ name: "article" })
-import { ref, computed, onMounted } from 'vue'
+defineOptions({ name: "article" });
+import { ref, computed, onMounted, nextTick } from "vue";
 import {
   NButton,
   NH1,
@@ -10,8 +10,9 @@ import {
   NSpin,
   NDropdown,
   NBackTop,
-  type DropdownOption,
-} from 'naive-ui'
+  NImageGroup,
+  type DropdownOption
+} from "naive-ui";
 import {
   ArrowBackOutline,
   PencilOutline,
@@ -20,176 +21,202 @@ import {
   DocumentTextOutline,
   ImageOutline,
   DocumentOutline,
-  ListOutline,
-} from '@vicons/ionicons5'
-import { h, type Component } from 'vue'
-import { NIcon } from 'naive-ui'
-import { useRoute, useRouter } from 'vue-router'
-import { useI18n } from '@/composables/useI18n'
-import { useBlogStore } from '@/stores/blog'
-import { useSettingsStore } from '@/stores/settings'
-import { useLayout } from '@/composables/useLayout'
-import OutlinePanel from '@/components/OutlinePanel.vue'
-import { exportToMarkdown, exportToImage, exportToPDF, exportToHTML } from '@/services/exporter'
-import type { Article } from '@/types'
+  ListOutline
+} from "@vicons/ionicons5";
+import { h, type Component } from "vue";
+import { NIcon } from "naive-ui";
+import { useRoute, useRouter } from "vue-router";
+import { useI18n } from "@/composables/useI18n";
+import { useBlogStore } from "@/stores/blog";
+import { useSettingsStore } from "@/stores/settings";
+import { useLayout } from "@/composables/useLayout";
+import OutlinePanel from "@/components/OutlinePanel.vue";
+import { exportToMarkdown, exportToImage, exportToPDF, exportToHTML } from "@/services/exporter";
+import type { Article } from "@/types";
 
 // 提取文档标题结构
 function extractHeadings(html: string): Array<{ level: number; text: string; id: string }> {
-  if (!html) return []
-  const headings: Array<{ level: number; text: string; id: string }> = []
-  const parser = new DOMParser()
-  const doc = parser.parseFromString(html, 'text/html')
-  const headingsInDoc = doc.querySelectorAll('h1, h2, h3, h4, h5, h6')
+  if (!html) return [];
+  const headings: Array<{ level: number; text: string; id: string }> = [];
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, "text/html");
+  const headingsInDoc = doc.querySelectorAll("h1, h2, h3, h4, h5, h6");
   headingsInDoc.forEach((el, i) => {
-    const level = parseInt(el.tagName[1])
-    const text = el.textContent?.trim() || `标题${i + 1}`
-    const id = `h-${i}`
-    headings.push({ level, text, id })
-  })
-  return headings
+    const level = parseInt(el.tagName[1]);
+    const text = el.textContent?.trim() || `标题${i + 1}`;
+    const id = `h-${i}`;
+    headings.push({ level, text, id });
+  });
+  return headings;
 }
 
-const { t } = useI18n()
-const route = useRoute()
-const router = useRouter()
-const blogStore = useBlogStore()
-const settingsStore = useSettingsStore()
+const { t } = useI18n();
+const route = useRoute();
+const router = useRouter();
+const blogStore = useBlogStore();
+const settingsStore = useSettingsStore();
 
-const article = ref<Article | null>(null)
-const loading = ref<boolean>(true)
-const exporting = ref<boolean>(false)
-const showOutline = ref<boolean>(false)
+const article = ref<Article | null>(null);
+const loading = ref<boolean>(true);
+const exporting = ref<boolean>(false);
+const showOutline = ref<boolean>(false);
 
-const { currentLayout } = useLayout()
-const articleId = computed(() => String(route.params.id))
+// 图片预览
+const previewVisible = ref(false);
+const previewImgs = ref<string[]>([]);
+const previewIdx = ref(0);
+
+const { currentLayout } = useLayout();
+const articleId = computed(() => String(route.params.id));
 
 // 文档大纲
 const headings = computed(() => {
-  if (!article.value?.content) return []
-  return extractHeadings(article.value.content)
-})
+  if (!article.value?.content) return [];
+  return extractHeadings(article.value.content);
+});
 
 // 在侧边栏模式下的大纲面板可见性
-const sidebarCollapsed = computed(() => currentLayout.value === 'sidebar')
+const sidebarCollapsed = computed(() => currentLayout.value === "sidebar");
 
 function handleHeadingNavigate(id: string): void {
   // 由于内容通过 v-html 渲染，需要找到对应的标题并滚动过去
-  const index = parseInt(id.replace('h-', ''))
-  const headingEls = document.querySelectorAll('.article-body h1, .article-body h2, .article-body h3, .article-body h4, .article-body h5, .article-body h6')
-  const el = headingEls[index] as HTMLElement | undefined
+  const index = parseInt(id.replace("h-", ""));
+  const headingEls = document.querySelectorAll(
+    ".article-body h1, .article-body h2, .article-body h3, .article-body h4, .article-body h5, .article-body h6"
+  );
+  const el = headingEls[index] as HTMLElement | undefined;
   if (el) {
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 }
 
 function formatDate(dateStr: string): string {
-  const date = new Date(dateStr)
-  const loc = settingsStore.locale === 'zh' ? 'zh-CN' : 'en-US'
-  return date.toLocaleDateString(loc, { year: 'numeric', month: 'long', day: 'numeric' })
+  const date = new Date(dateStr);
+  const loc = settingsStore.locale === "zh" ? "zh-CN" : "en-US";
+  return date.toLocaleDateString(loc, { year: "numeric", month: "long", day: "numeric" });
 }
 
 function goBack(): void {
-  router.back()
+  router.back();
 }
 
 function goEdit(): void {
-  if (article.value) router.push(`/editor/${article.value.id}`)
+  if (article.value) router.push(`/editor/${article.value.id}`);
 }
 
 async function handleDelete(): Promise<void> {
-  if (!article.value) return
-  if (confirm(t('article.confirmDelete'))) {
-    await blogStore.deleteArticle(article.value.id)
-    router.push('/')
+  if (!article.value) return;
+  if (confirm(t("article.confirmDelete"))) {
+    await blogStore.deleteArticle(article.value.id);
+    router.push("/");
   }
 }
 
 function renderIcon(icon: Component) {
-  return () => h(NIcon, null, { default: () => h(icon) })
+  return () => h(NIcon, null, { default: () => h(icon) });
 }
 
 // 导出下拉菜单
 const exportOptions = computed<DropdownOption[]>(() => [
   {
-    label: t('article.exportHTML'),
-    key: 'html',
-    icon: renderIcon(DocumentOutline),
+    label: t("article.exportHTML"),
+    key: "html",
+    icon: renderIcon(DocumentOutline)
   },
   {
-    label: t('article.exportMarkdown'),
-    key: 'markdown',
-    icon: renderIcon(DocumentTextOutline),
+    label: t("article.exportMarkdown"),
+    key: "markdown",
+    icon: renderIcon(DocumentTextOutline)
   },
   {
-    label: t('article.exportImage'),
-    key: 'image',
-    icon: renderIcon(ImageOutline),
+    label: t("article.exportImage"),
+    key: "image",
+    icon: renderIcon(ImageOutline)
   },
   {
-    label: t('article.exportPDF'),
-    key: 'pdf',
-    icon: renderIcon(DocumentOutline),
-  },
-])
+    label: t("article.exportPDF"),
+    key: "pdf",
+    icon: renderIcon(DocumentOutline)
+  }
+]);
 
 async function handleExportSelect(key: string | number): Promise<void> {
-  if (!article.value) return
-  exporting.value = true
+  if (!article.value) return;
+  exporting.value = true;
   try {
-    const title = article.value.title
-    if (key === 'html') {
-      const html = exportToHTML(article.value)
-      downloadBlob(new Blob([html], { type: 'text/html;charset=utf-8' }), `${slugify(title)}.html`)
-    } else if (key === 'markdown') {
-      const md = exportToMarkdown(article.value)
-      downloadBlob(new Blob([md], { type: 'text/markdown;charset=utf-8' }), `${slugify(title)}.md`)
-    } else if (key === 'image') {
-      const target = document.querySelector('.export-target') as HTMLElement
-      if (!target) return
-      const blob = await exportToImage(target, title)
-      downloadBlob(blob, `${slugify(title)}.png`)
-    } else if (key === 'pdf') {
-      const target = document.querySelector('.export-target') as HTMLElement
-      if (!target) return
-      const blob = await exportToPDF(target, title)
-      downloadBlob(blob, `${slugify(title)}.pdf`)
+    const title = article.value.title;
+    if (key === "html") {
+      const html = exportToHTML(article.value);
+      downloadBlob(new Blob([html], { type: "text/html;charset=utf-8" }), `${slugify(title)}.html`);
+    } else if (key === "markdown") {
+      const md = exportToMarkdown(article.value);
+      downloadBlob(new Blob([md], { type: "text/markdown;charset=utf-8" }), `${slugify(title)}.md`);
+    } else if (key === "image") {
+      const target = document.querySelector(".export-target") as HTMLElement;
+      if (!target) return;
+      const blob = await exportToImage(target, title);
+      downloadBlob(blob, `${slugify(title)}.png`);
+    } else if (key === "pdf") {
+      const target = document.querySelector(".export-target") as HTMLElement;
+      if (!target) return;
+      const blob = await exportToPDF(target, title);
+      downloadBlob(blob, `${slugify(title)}.pdf`);
     }
   } finally {
-    exporting.value = false
+    exporting.value = false;
   }
 }
 
 function downloadBlob(blob: Blob, filename: string): void {
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function slugify(title: string): string {
   return (
     title
       .toLowerCase()
-      .replace(/[^\w一-龥]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      .slice(0, 60) || 'paperblog'
-  )
+      .replace(/[^\w一-龥]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 60) || "paperblog"
+  );
+}
+
+// 正文渲染完成后设置图片预览
+function setupContentInteractions(rootEl: HTMLElement | null): void {
+  if (!rootEl) return;
+  const imgs = Array.from(rootEl.querySelectorAll("img"));
+  previewImgs.value = imgs.map((img) => img.src);
+  imgs.forEach((img, i) => {
+    img.style.cursor = "zoom-in";
+    img.onclick = () => {
+      previewIdx.value = i;
+      previewVisible.value = true;
+    };
+  });
 }
 
 onMounted(async () => {
   try {
-    article.value = await blogStore.getArticleById(articleId.value)
+    article.value = await blogStore.getArticleById(articleId.value);
   } finally {
-    loading.value = false
+    loading.value = false;
   }
   if (!article.value) {
-    router.push('/')
+    router.push("/");
+    return;
   }
-})
+  nextTick(() => {
+    const el = document.querySelector(".article-body") as HTMLElement | null;
+    setupContentInteractions(el);
+  });
+});
 </script>
 
 <template>
@@ -213,36 +240,22 @@ onMounted(async () => {
     />
 
     <div class="article-actions">
-      <NButton
-        tertiary
-        size="small"
-        :render-icon="renderIcon(ArrowBackOutline)"
-        @click="goBack"
-      >
-        {{ t('nav.back') }}
+      <NButton tertiary size="small" :render-icon="renderIcon(ArrowBackOutline)" @click="goBack">
+        {{ t("nav.back") }}
       </NButton>
       <div class="action-group">
-        <NDropdown
-          :options="exportOptions"
-          trigger="click"
-          @select="handleExportSelect"
-        >
+        <NDropdown :options="exportOptions" trigger="click" @select="handleExportSelect">
           <NButton
             tertiary
             size="small"
             :loading="exporting"
             :render-icon="renderIcon(DownloadOutline)"
           >
-            {{ t('article.export') }}
+            {{ t("article.export") }}
           </NButton>
         </NDropdown>
-        <NButton
-          tertiary
-          size="small"
-          :render-icon="renderIcon(PencilOutline)"
-          @click="goEdit"
-        >
-          {{ t('article.edit') }}
+        <NButton tertiary size="small" :render-icon="renderIcon(PencilOutline)" @click="goEdit">
+          {{ t("article.edit") }}
         </NButton>
         <NButton
           tertiary
@@ -251,7 +264,7 @@ onMounted(async () => {
           @click="handleDelete"
           class="delete-btn"
         >
-          {{ t('article.delete') }}
+          {{ t("article.delete") }}
         </NButton>
       </div>
     </div>
@@ -263,7 +276,7 @@ onMounted(async () => {
           <NText depth="3">{{ formatDate(article.createdAt) }}</NText>
           <NText depth="3" class="meta-dot">·</NText>
           <NText depth="3"
-            >{{ blogStore.getReadTime(article.content) }} {{ t('article.readTime') }}</NText
+            >{{ blogStore.getReadTime(article.content) }} {{ t("article.readTime") }}</NText
           >
         </div>
         <NTag
@@ -283,7 +296,16 @@ onMounted(async () => {
 
       <NDivider />
 
-      <div class="article-body article-content" v-html="article.content"></div>
+      <n-image-group
+        v-if="article.content"
+        v-model:show="previewVisible"
+        v-model:current="previewIdx"
+        :src-list="previewImgs"
+        :show-toolbar="true"
+        style="display: contents"
+      >
+        <div class="article-body article-content" v-html="article.content"></div>
+      </n-image-group>
     </div>
   </div>
 
@@ -312,7 +334,11 @@ onMounted(async () => {
   color: var(--color-text-secondary);
   box-shadow: var(--shadow-sm);
   z-index: 48;
-  transition: background var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), left 0.2s;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    left 0.2s;
 
   &:hover {
     background: var(--color-bg-tertiary);
@@ -320,7 +346,10 @@ onMounted(async () => {
     box-shadow: var(--shadow-md);
   }
 }
-
+.article-page {
+  width: 100%;
+  max-width: 1100px;
+}
 .app-main.sidebar-collapsed ~ .article-page .outline-float-btn {
   left: 68px;
 }
@@ -333,7 +362,9 @@ onMounted(async () => {
 
   :deep(.n-button) {
     border-radius: var(--radius-sm);
-    transition: background var(--transition-fast), color var(--transition-fast);
+    transition:
+      background var(--transition-fast),
+      color var(--transition-fast);
   }
 }
 
