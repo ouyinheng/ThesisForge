@@ -8,6 +8,7 @@ import {
   NButtonGroup,
   NIcon,
   NInput,
+  NSwitch,
 } from 'naive-ui'
 import {
   SunnyOutline,
@@ -17,12 +18,14 @@ import {
 } from '@vicons/ionicons5'
 import { OpenOutline, CheckmarkOutline } from '@vicons/ionicons5'
 import { useSettingsStore } from '@/stores/settings'
+import { useTabsStore } from '@/stores/tabs'
 import { useI18n } from '@/composables/useI18n'
 import { useMessage } from 'naive-ui'
 import { h, type Component } from 'vue'
 import { isDesktop, selectDirectory } from '@/services/storage'
 
 const settings = useSettingsStore()
+const tabs = useTabsStore()
 const { t, setLocale, currentLocale: locale } = useI18n()
 const message = useMessage()
 
@@ -50,7 +53,6 @@ const pathDraft = ref<string>('')
 const saving = ref<boolean>(false)
 
 async function startEditPath() {
-  // 桌面端：直接弹出系统文件夹选择对话框
   if (isDesktopApp.value) {
     const picked = await selectDirectory()
     if (picked) {
@@ -58,7 +60,6 @@ async function startEditPath() {
     }
     return
   }
-  // Web 端：手动输入
   pathDraft.value = settings.storagePath || ''
   editingPath.value = true
 }
@@ -116,6 +117,14 @@ async function resetPath() {
     saving.value = false
   }
 }
+
+// 主题色选项：默认 + 3 种
+const ACCENT_PRESETS = [
+  { label: '', value: '#D12F2F' },  // 默认红
+  { label: '', value: '#2563EB' },  // 蓝
+  { label: '', value: '#059669' },  // 绿
+  { label: '', value: '#9333EA' },  // 紫
+]
 </script>
 
 <template>
@@ -208,20 +217,68 @@ async function resetPath() {
           <NText depth="3" class="setting-label">{{ t('language') }}</NText>
           <NButtonGroup size="small">
             <NButton
-              :type="locale === 'zh' ? 'primary' : 'default'"
-              :ghost="locale !== 'zh'"
+              :type="settings.locale === 'zh' ? 'primary' : 'default'"
+              :ghost="settings.locale !== 'zh'"
               @click="setLocale('zh')"
             >
               中文
             </NButton>
             <NButton
-              :type="locale === 'en' ? 'primary' : 'default'"
-              :ghost="locale !== 'en'"
+              :type="settings.locale === 'en' ? 'primary' : 'default'"
+              :ghost="settings.locale !== 'en'"
               @click="setLocale('en')"
             >
               EN
             </NButton>
           </NButtonGroup>
+        </div>
+
+        <!-- 主题色 -->
+        <div class="setting-row">
+          <NText depth="3" class="setting-label">{{ t('accentColor') }}</NText>
+          <n-space :size="6">
+            <button
+              class="accent-swatch"
+              :class="{ active: !settings.accentColor }"
+              :title="t('accentDefault')"
+              @click="settings.accentColor = ''"
+            >
+              <span class="swatch-default">D</span>
+              <NIcon v-if="!settings.accentColor" :size="12" class="swatch-check"><CheckmarkOutline /></NIcon>
+            </button>
+            <button
+              v-for="c in ACCENT_PRESETS"
+              :key="c.value"
+              class="accent-swatch"
+              :class="{ active: settings.accentColor === c.value }"
+              :style="{ background: c.value }"
+              @click="settings.accentColor = c.value"
+            >
+              <NIcon v-if="settings.accentColor === c.value" :size="12" class="swatch-check"><CheckmarkOutline /></NIcon>
+            </button>
+          </n-space>
+        </div>
+
+        <!-- 天气城市 -->
+        <div class="setting-row">
+          <NText depth="3" class="setting-label">{{ t('city') }}</NText>
+          <NInput
+            :value="settings.weatherCity"
+            @update:value="settings.weatherCity = $event || ''"
+            :placeholder="t('cityPlaceholder')"
+            size="small"
+            style="width: 200px"
+            clearable
+          />
+        </div>
+
+        <!-- 显示标签页 -->
+        <div class="setting-row">
+          <NText depth="3" class="setting-label">{{ t('showTabs') }}</NText>
+          <NSwitch :value="tabs.showTabs" @update:value="tabs.toggleShow">
+            <template #checked>{{ t('showTabsOn') }}</template>
+            <template #unchecked>{{ t('showTabsOff') }}</template>
+          </NSwitch>
         </div>
 
         <!-- 存储路径 -->
@@ -336,6 +393,40 @@ async function resetPath() {
   font-size: var(--fs-sm);
   font-weight: 500;
   color: var(--color-text-secondary);
+}
+
+.accent-swatch {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color var(--transition-fast), transform var(--transition-fast);
+}
+.accent-swatch:hover {
+  transform: scale(1.12);
+}
+.accent-swatch.active {
+  border-color: var(--color-text);
+}
+.swatch-default {
+  font-size: 11px;
+  font-weight: 700;
+  color: #D12F2F;
+  font-family: var(--font-serif);
+  line-height: 1;
+}
+.swatch-check {
+  color: #ffffff;
+  filter: drop-shadow(0 0 1px rgba(0,0,0,0.5));
+}
+.accent-swatch:first-child {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
 }
 
 .setting-path-block {

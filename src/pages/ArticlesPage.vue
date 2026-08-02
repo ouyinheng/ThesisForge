@@ -1,4 +1,5 @@
 <script setup lang="ts">
+defineOptions({ name: "papers" })
 import { computed, ref } from 'vue'
 import { NButton, NH1, NH2, NText, NTag, NEmpty } from 'naive-ui'
 import { SwapVerticalOutline } from '@vicons/ionicons5'

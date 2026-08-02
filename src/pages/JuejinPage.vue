@@ -1,4 +1,5 @@
 <script setup lang="ts">
+defineOptions({ name: "juejin" })
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import {
   NCard,

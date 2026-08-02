@@ -1,4 +1,5 @@
 <script setup lang="ts">
+defineOptions({ name: "editor" })
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'

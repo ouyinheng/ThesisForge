@@ -16,6 +16,7 @@ interface FileBridge {
   getStoragePath(): Promise<string>
   setStoragePath(path: string): Promise<void>
   migrateStorage(fromPath: string, toPath: string): Promise<void>
+  selectDirectory(): Promise<string>
 }
 
 interface WindowBridge {

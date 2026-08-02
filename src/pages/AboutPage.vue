@@ -1,4 +1,5 @@
 <script setup lang="ts">
+defineOptions({ name: "about" })
 import { NH1, NH2, NText, NDivider, NCard } from 'naive-ui'
 import { useI18n } from '@/composables/useI18n'
 

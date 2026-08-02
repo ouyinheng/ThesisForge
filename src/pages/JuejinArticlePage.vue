@@ -1,4 +1,5 @@
 <script setup lang="ts">
+defineOptions({ name: "juejin-article" })
 import { ref, computed, onMounted, watch, h, nextTick, createApp } from 'vue'
 import { openInIframe } from '@/composables/useExternalLink'
 import {

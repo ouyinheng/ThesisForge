@@ -1,4 +1,5 @@
 <script setup lang="ts">
+defineOptions({ name: "article" })
 import { ref, computed, onMounted } from 'vue'
 import {
   NButton,
@@ -8,6 +9,7 @@ import {
   NDivider,
   NSpin,
   NDropdown,
+  NBackTop,
   type DropdownOption,
 } from 'naive-ui'
 import {
@@ -28,7 +30,7 @@ import { useBlogStore } from '@/stores/blog'
 import { useSettingsStore } from '@/stores/settings'
 import { useLayout } from '@/composables/useLayout'
 import OutlinePanel from '@/components/OutlinePanel.vue'
-import { exportToMarkdown, exportToImage, exportToPDF } from '@/services/exporter'
+import { exportToMarkdown, exportToImage, exportToPDF, exportToHTML } from '@/services/exporter'
 import type { Article } from '@/types'
 
 // 提取文档标题结构
@@ -109,6 +111,11 @@ function renderIcon(icon: Component) {
 // 导出下拉菜单
 const exportOptions = computed<DropdownOption[]>(() => [
   {
+    label: t('article.exportHTML'),
+    key: 'html',
+    icon: renderIcon(DocumentOutline),
+  },
+  {
     label: t('article.exportMarkdown'),
     key: 'markdown',
     icon: renderIcon(DocumentTextOutline),
@@ -130,7 +137,10 @@ async function handleExportSelect(key: string | number): Promise<void> {
   exporting.value = true
   try {
     const title = article.value.title
-    if (key === 'markdown') {
+    if (key === 'html') {
+      const html = exportToHTML(article.value)
+      downloadBlob(new Blob([html], { type: 'text/html;charset=utf-8' }), `${slugify(title)}.html`)
+    } else if (key === 'markdown') {
       const md = exportToMarkdown(article.value)
       downloadBlob(new Blob([md], { type: 'text/markdown;charset=utf-8' }), `${slugify(title)}.md`)
     } else if (key === 'image') {
@@ -280,6 +290,9 @@ onMounted(async () => {
   <div class="article-loading" v-else-if="loading">
     <NSpin size="large" />
   </div>
+
+  <!-- 回到顶部 -->
+  <n-back-top :right="32" :bottom="40" :visibility-height="300" />
 </template>
 
 <style lang="less" scoped>

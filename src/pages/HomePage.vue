@@ -1,12 +1,8 @@
 <script setup lang="ts">
+defineOptions({ name: "home" })
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { NH1, NH2, NH3, NText, NTag, NDivider, NIcon, NButton, NTooltip } from 'naive-ui'
+import { NH1, NH3, NText, NTag, NDivider, NIcon, NButton, NTooltip } from 'naive-ui'
 import {
-  SunnyOutline,
-  PartlySunnyOutline,
-  CloudOutline,
-  RainyOutline,
-  SnowOutline,
   DocumentTextOutline,
   PencilOutline,
   BookOutline,
@@ -21,12 +17,21 @@ import {
   FlashOutline,
   BarChartOutline,
   TrendingUpOutline,
-  RefreshOutline,
 } from '@vicons/ionicons5'
 import { useI18n } from '@/composables/useI18n'
 import { useBlogStore } from '@/stores/blog'
 import { useRouter } from 'vue-router'
-import { h, type Component } from 'vue'
+import { type Component } from 'vue'
+// 工具箱弹窗
+import ToolModal from '@/components/ToolModal.vue'
+import WordCountModal from '@/components/WordCountModal.vue'
+import JsonModal from '@/components/JsonModal.vue'
+import UrlEncodeModal from '@/components/UrlEncodeModal.vue'
+import RegexModal from '@/components/RegexModal.vue'
+import ImageToPdfModal from '@/components/ImageToPdfModal.vue'
+// 天气 & 名言组件
+import WeatherCard from '@/components/WeatherCard.vue'
+import QuoteCard from '@/components/QuoteCard.vue'
 
 const { t } = useI18n()
 const blogStore = useBlogStore()
@@ -60,44 +65,6 @@ const greeting = computed(() => {
   if (h < 22) return t('home.greetingEvening')
   return t('home.greetingEvening')
 })
-
-// 天气（纯前端模拟）
-interface WeatherData {
-  icon: Component
-  temp: number
-  desc: string
-  humidity: number
-  wind: string
-  city: string
-  high: number
-  low: number
-}
-
-const weatherList: WeatherData[] = [
-  { icon: SunnyOutline, temp: 26, desc: '晴朗', humidity: 45, wind: '东南风 3级', city: '北京', high: 29, low: 18 },
-  { icon: PartlySunnyOutline, temp: 22, desc: '多云', humidity: 60, wind: '东风 2级', city: '上海', high: 25, low: 17 },
-  { icon: CloudOutline, temp: 19, desc: '阴', humidity: 75, wind: '北风 2级', city: '成都', high: 22, low: 15 },
-  { icon: RainyOutline, temp: 16, desc: '小雨', humidity: 88, wind: '东北风 3级', city: '杭州', high: 18, low: 13 },
-]
-
-const weather = ref<WeatherData>(weatherList[0])
-
-onMounted(() => {
-  const savedCity = localStorage.getItem('dashboard-weather-city')
-  if (savedCity) {
-    const found = weatherList.find(w => w.city === savedCity)
-    if (found) weather.value = found
-  } else {
-    const idx = Math.floor(Math.random() * weatherList.length)
-    weather.value = weatherList[idx]
-  }
-})
-
-function switchWeather(): void {
-  const idx = weatherList.findIndex(w => w.city === weather.value.city)
-  weather.value = weatherList[(idx + 1) % weatherList.length]
-  localStorage.setItem('dashboard-weather-city', weather.value.city)
-}
 
 // 文章统计
 const totalArticles = computed(() => blogStore.articleMetas.length)
@@ -144,6 +111,14 @@ const recentArticles = computed(() => {
     .slice(0, 5)
 })
 
+// Tools modal state
+const showMdModal = ref(false)
+const showWcModal = ref(false)
+const showJsonModal = ref(false)
+const showUrlModal = ref(false)
+const showRegexModal = ref(false)
+const showPdfModal = ref(false)
+
 // 工具快捷方式
 interface QuickTool {
   name: string
@@ -154,43 +129,20 @@ interface QuickTool {
 }
 
 const quickTools = computed<QuickTool[]>(() => [
-  { name: 'Markdown', icon: CodeOutline, desc: '标记语言', action: () => {}, color: '#1976d2' },
-  { name: '图片转PDF', icon: ColorPaletteOutline, desc: '文档生成', action: () => {}, color: '#d32f2f' },
-  { name: '字数统计', icon: CalculatorOutline, desc: '文本分析', action: () => {}, color: '#388e3c' },
-  { name: 'JSON格式化', icon: FlashOutline, desc: '数据美化', action: () => {}, color: '#f57c00' },
-  { name: 'URL编码', icon: GlobeOutline, desc: '链接处理', action: () => {}, color: '#7b1fa2' },
-  { name: '正则测试', icon: SparklesOutline, desc: '表达式调试', action: () => {}, color: '#00796b' },
+  { name: 'Markdown', icon: CodeOutline, desc: '标记语言', action: () => { showMdModal.value = true }, color: '#1976d2' },
+  { name: '图片转PDF', icon: ColorPaletteOutline, desc: '文档生成', action: () => { showPdfModal.value = true }, color: '#d32f2f' },
+  { name: '字数统计', icon: CalculatorOutline, desc: '文本分析', action: () => { showWcModal.value = true }, color: '#388e3c' },
+  { name: 'JSON格式化', icon: FlashOutline, desc: '数据美化', action: () => { showJsonModal.value = true }, color: '#f57c00' },
+  { name: 'URL编码', icon: GlobeOutline, desc: '链接处理', action: () => { showUrlModal.value = true }, color: '#7b1fa2' },
+  { name: '正则测试', icon: SparklesOutline, desc: '表达式调试', action: () => { showRegexModal.value = true }, color: '#00796b' },
 ])
 
-// 每日一言
-const quotes = ref([
-  { text: '科学的灵感，绝不是坐等可以等来的。', author: '华罗庚' },
-  { text: '学问是经验的积累，才能是刻苦的忍耐。', author: '茅以升' },
-  { text: '在科学上最好的助手是自己的头脑，而不是别的东西。', author: '法布尔' },
-  { text: '科学的每一项巨大成就，都是以大胆的幻想为出发点的。', author: '杜威' },
-  { text: '科学的界限就像地平线一样，你越接近它，它挪得越远。', author: '布埃斯特' },
-  { text: '真理的大海，让未发现的一切事物躺卧在我的眼前，任我去探寻。', author: '牛顿' },
-])
-
-const quoteIndex = ref(Math.floor((Date.now() - new Date(now.value.getFullYear(), 0, 0).getTime()) / 86400000) % quotes.value.length)
-const currentQuote = computed(() => quotes.value[quoteIndex.value])
-function shuffleQuote(): void {
-  let next = quoteIndex.value
-  if (quotes.value.length > 1) {
-    while (next === quoteIndex.value) next = Math.floor(Math.random() * quotes.value.length)
-  }
-  quoteIndex.value = next
-}
 
 // 快捷操作
 function goWrite() { router.push('/editor') }
 function goPapers() { router.push('/papers') }
 function goJuejin() { router.push('/juejin') }
 function goArticle(id: string) { router.push(`/article/${id}`) }
-
-function renderIcon(icon: Component) {
-  return () => h(NIcon, null, { default: () => h(icon) })
-}
 
 const version = '1.0.0'
 </script>
@@ -205,16 +157,7 @@ const version = '1.0.0'
         <NText class="hero-time">{{ timeStr }}</NText>
       </div>
       <div class="hero-right">
-        <div class="weather-card" @click="switchWeather" title="点击切换城市">
-          <NIcon :size="40" class="weather-icon">
-            <component :is="weather.icon" />
-          </NIcon>
-          <div class="weather-info">
-            <span class="weather-temp">{{ weather.temp }}°</span>
-            <span class="weather-desc">{{ weather.city }} · {{ weather.desc }}</span>
-            <span class="weather-extra">{{ weather.low }}° ~ {{ weather.high }}° 湿度 {{ weather.humidity }}%</span>
-          </div>
-        </div>
+        <WeatherCard style="min-width: 200px" />
       </div>
     </section>
 
@@ -277,7 +220,7 @@ const version = '1.0.0'
         <div class="quick-actions">
           <NTooltip trigger="hover" v-for="tool in quickTools" :key="tool.name" placement="bottom">
             <template #trigger>
-              <button class="action-btn" :style="{ '--accent': tool.color }">
+              <button class="action-btn" :style="{ '--accent': tool.color }" @click="tool.action()">
                 <NIcon :size="22"><component :is="tool.icon" /></NIcon>
                 <span class="action-name">{{ tool.name }}</span>
               </button>
@@ -345,17 +288,7 @@ const version = '1.0.0'
         </div>
       </section>
 
-      <section class="dashboard-panel dashboard-quote">
-        <NIcon :size="16" class="quote-icon"><BookOutline /></NIcon>
-        <div class="quote-content">
-          <NText class="quote-text">{{ currentQuote.text }}</NText>
-          <NText depth="3" class="quote-author">—— {{ currentQuote.author }}</NText>
-        </div>
-        <NButton quaternary size="small" class="quote-refresh" @click="shuffleQuote">
-          <template #icon><NIcon :size="14"><RefreshOutline /></NIcon></template>
-          {{ t('home.quoteRefresh') }}
-        </NButton>
-      </section>
+      <QuoteCard />
     </div>
 
     <!-- Footer 状态条 -->
@@ -367,6 +300,14 @@ const version = '1.0.0'
       <span>{{ t('home.footerVersion') }} {{ version }}</span>
     </footer>
   </div>
+
+  <!-- 工具箱弹窗 -->
+  <ToolModal v-model:show="showMdModal" />
+  <WordCountModal v-model:show="showWcModal" />
+  <JsonModal v-model:show="showJsonModal" />
+  <UrlEncodeModal v-model:show="showUrlModal" />
+  <RegexModal v-model:show="showRegexModal" />
+  <ImageToPdfModal v-model:show="showPdfModal" />
 </template>
 
 <style lang="less" scoped>

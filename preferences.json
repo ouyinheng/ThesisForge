@@ -1,3 +1,5 @@
 {
-  "blog-layout": "sidebar"
+  "blog-layout": "sidebar",
+  "blog-theme": "light",
+  "blog-locale": "z"
 }
