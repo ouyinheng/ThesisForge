@@ -89,6 +89,31 @@ export const useBlogStore = defineStore('blog', () => {
     return Object.entries(tagMap).map(([name, count]) => ({ name, count }))
   })
 
+  // 本周（最近 7 天，含今天）内更新的文章数量
+  const weekCount: ComputedRef<number> = computed(() => {
+    const now = new Date()
+    const start = new Date(now)
+    start.setHours(0, 0, 0, 0)
+    start.setDate(start.getDate() - 6) // 含今天共 7 天
+    return articleMetas.value.filter((m) => {
+      const t = new Date(m.updatedAt).getTime()
+      return t >= start.getTime() && t <= now.getTime()
+    }).length
+  })
+
+  // 按日期（YYYY-MM-DD）聚合更新次数，用于工作台热力图
+  const activityMap: ComputedRef<Record<string, number>> = computed(() => {
+    const map: Record<string, number> = {}
+    articleMetas.value.forEach((m) => {
+      const d = new Date(m.updatedAt)
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
+        d.getDate()
+      ).padStart(2, '0')}`
+      map[key] = (map[key] || 0) + 1
+    })
+    return map
+  })
+
   function getReadTime(html: string): number {
     const text = html.replace(/<[^>]*>/g, '')
     const wordsPerMinute = 300
@@ -105,6 +130,8 @@ export const useBlogStore = defineStore('blog', () => {
     getArticleById,
     sortedMetas,
     allTags,
+    weekCount,
+    activityMap,
     getReadTime,
   }
 })

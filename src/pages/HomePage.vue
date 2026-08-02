@@ -1,193 +1,775 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { NButton, NH1, NH2, NText, NTag, NEmpty } from 'naive-ui'
-import { SwapVerticalOutline } from '@vicons/ionicons5'
-import { h, type Component } from 'vue'
-import { NIcon } from 'naive-ui'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { NH1, NH2, NH3, NText, NTag, NDivider, NIcon, NButton, NTooltip } from 'naive-ui'
+import {
+  SunnyOutline,
+  PartlySunnyOutline,
+  CloudOutline,
+  RainyOutline,
+  SnowOutline,
+  DocumentTextOutline,
+  PencilOutline,
+  BookOutline,
+  CalculatorOutline,
+  TimeOutline,
+  SparklesOutline,
+  GlobeOutline,
+  CodeOutline,
+  ColorPaletteOutline,
+  LibraryOutline,
+  CompassOutline,
+  FlashOutline,
+  BarChartOutline,
+  TrendingUpOutline,
+  RefreshOutline,
+} from '@vicons/ionicons5'
 import { useI18n } from '@/composables/useI18n'
 import { useBlogStore } from '@/stores/blog'
-import { useSettingsStore } from '@/stores/settings'
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter } from 'vue-router'
+import { h, type Component } from 'vue'
 
 const { t } = useI18n()
 const blogStore = useBlogStore()
-const settingsStore = useSettingsStore()
 const router = useRouter()
-const route = useRoute()
 
-const sortBy = ref<'date' | 'title'>('date')
-const activeTag = computed<string | undefined>(() => {
-  const tag = route.query.tag
-  return Array.isArray(tag) ? tag[0] || undefined : tag || undefined
+// 时钟
+const now = ref(new Date())
+let timer: ReturnType<typeof setInterval>
+onMounted(() => {
+  timer = setInterval(() => {
+    now.value = new Date()
+  }, 1000)
+})
+onUnmounted(() => clearInterval(timer))
+
+const timeStr = computed(() => {
+  return now.value.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 })
 
-const displayedMetas = computed(() => {
-  let metas = [...blogStore.sortedMetas]
-  if (activeTag.value) {
-    metas = metas.filter((m) => m.tags.includes(activeTag.value!))
-  }
-  if (sortBy.value === 'title') {
-    metas.sort((a, b) => a.title.localeCompare(b.title))
+const dateStr = computed(() => {
+  return now.value.toLocaleDateString([], { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })
+})
+
+// 问候语
+const greeting = computed(() => {
+  const h = now.value.getHours()
+  if (h < 6) return t('home.greetingEvening')
+  if (h < 12) return t('home.greetingMorning')
+  if (h < 14) return t('home.greetingAfternoon')
+  if (h < 18) return t('home.greetingAfternoon')
+  if (h < 22) return t('home.greetingEvening')
+  return t('home.greetingEvening')
+})
+
+// 天气（纯前端模拟）
+interface WeatherData {
+  icon: Component
+  temp: number
+  desc: string
+  humidity: number
+  wind: string
+  city: string
+  high: number
+  low: number
+}
+
+const weatherList: WeatherData[] = [
+  { icon: SunnyOutline, temp: 26, desc: '晴朗', humidity: 45, wind: '东南风 3级', city: '北京', high: 29, low: 18 },
+  { icon: PartlySunnyOutline, temp: 22, desc: '多云', humidity: 60, wind: '东风 2级', city: '上海', high: 25, low: 17 },
+  { icon: CloudOutline, temp: 19, desc: '阴', humidity: 75, wind: '北风 2级', city: '成都', high: 22, low: 15 },
+  { icon: RainyOutline, temp: 16, desc: '小雨', humidity: 88, wind: '东北风 3级', city: '杭州', high: 18, low: 13 },
+]
+
+const weather = ref<WeatherData>(weatherList[0])
+
+onMounted(() => {
+  const savedCity = localStorage.getItem('dashboard-weather-city')
+  if (savedCity) {
+    const found = weatherList.find(w => w.city === savedCity)
+    if (found) weather.value = found
   } else {
-    metas.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    const idx = Math.floor(Math.random() * weatherList.length)
+    weather.value = weatherList[idx]
   }
-  return metas
 })
 
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr)
-  const loc = settingsStore.locale === 'zh' ? 'zh-CN' : 'en-US'
-  return date.toLocaleDateString(loc, { year: 'numeric', month: 'short', day: 'numeric' })
+function switchWeather(): void {
+  const idx = weatherList.findIndex(w => w.city === weather.value.city)
+  weather.value = weatherList[(idx + 1) % weatherList.length]
+  localStorage.setItem('dashboard-weather-city', weather.value.city)
 }
 
-function goToArticle(id: string): void {
-  router.push(`/article/${id}`)
+// 文章统计
+const totalArticles = computed(() => blogStore.articleMetas.length)
+const totalTags = computed(() => blogStore.allTags.length)
+const weekCount = computed(() => blogStore.weekCount)
+
+const activeDays = computed(() => {
+  const nowTime = Date.now()
+  const map = blogStore.activityMap
+  let days = 0
+  for (const key of Object.keys(map)) {
+    const t = new Date(key + 'T00:00:00').getTime()
+    if (nowTime - t <= 30 * 86400000 && nowTime - t >= 0) days++
+  }
+  return days
+})
+
+// 写作活跃度热力图：最近 13 周（91 天），每列=一周，行=周日..周六
+const activityWeeks = computed(() => {
+  const map = blogStore.activityMap
+  const today = new Date()
+  const day = today.getDay() // 0=Sun
+  const start = new Date(today)
+  start.setHours(0, 0, 0, 0)
+  start.setDate(today.getDate() - day - 12 * 7) // 13 周前的周日
+  const cells: Array<{ key: string; count: number; level: number }> = []
+  for (let i = 0; i < 13 * 7; i++) {
+    const d = new Date(start)
+    d.setDate(start.getDate() + i)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
+      d.getDate()
+    ).padStart(2, '0')}`
+    const count = map[key] || 0
+    const level = count === 0 ? 0 : count >= 4 ? 3 : count >= 2 ? 2 : 1
+    cells.push({ key, count, level })
+  }
+  return cells
+})
+
+// 最近文章（扩展为 5 条）
+const recentArticles = computed(() => {
+  return [...blogStore.articleMetas]
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    .slice(0, 5)
+})
+
+// 工具快捷方式
+interface QuickTool {
+  name: string
+  icon: Component
+  desc: string
+  action: () => void
+  color: string
 }
 
-function clearFilter() {
-  router.push('/')
+const quickTools = computed<QuickTool[]>(() => [
+  { name: 'Markdown', icon: CodeOutline, desc: '标记语言', action: () => {}, color: '#1976d2' },
+  { name: '图片转PDF', icon: ColorPaletteOutline, desc: '文档生成', action: () => {}, color: '#d32f2f' },
+  { name: '字数统计', icon: CalculatorOutline, desc: '文本分析', action: () => {}, color: '#388e3c' },
+  { name: 'JSON格式化', icon: FlashOutline, desc: '数据美化', action: () => {}, color: '#f57c00' },
+  { name: 'URL编码', icon: GlobeOutline, desc: '链接处理', action: () => {}, color: '#7b1fa2' },
+  { name: '正则测试', icon: SparklesOutline, desc: '表达式调试', action: () => {}, color: '#00796b' },
+])
+
+// 每日一言
+const quotes = ref([
+  { text: '科学的灵感，绝不是坐等可以等来的。', author: '华罗庚' },
+  { text: '学问是经验的积累，才能是刻苦的忍耐。', author: '茅以升' },
+  { text: '在科学上最好的助手是自己的头脑，而不是别的东西。', author: '法布尔' },
+  { text: '科学的每一项巨大成就，都是以大胆的幻想为出发点的。', author: '杜威' },
+  { text: '科学的界限就像地平线一样，你越接近它，它挪得越远。', author: '布埃斯特' },
+  { text: '真理的大海，让未发现的一切事物躺卧在我的眼前，任我去探寻。', author: '牛顿' },
+])
+
+const quoteIndex = ref(Math.floor((Date.now() - new Date(now.value.getFullYear(), 0, 0).getTime()) / 86400000) % quotes.value.length)
+const currentQuote = computed(() => quotes.value[quoteIndex.value])
+function shuffleQuote(): void {
+  let next = quoteIndex.value
+  if (quotes.value.length > 1) {
+    while (next === quoteIndex.value) next = Math.floor(Math.random() * quotes.value.length)
+  }
+  quoteIndex.value = next
 }
+
+// 快捷操作
+function goWrite() { router.push('/editor') }
+function goPapers() { router.push('/papers') }
+function goJuejin() { router.push('/juejin') }
+function goArticle(id: string) { router.push(`/article/${id}`) }
 
 function renderIcon(icon: Component) {
   return () => h(NIcon, null, { default: () => h(icon) })
 }
+
+const version = '1.0.0'
 </script>
 
 <template>
-  <div class="home-page">
-    <div class="page-header">
-      <NH1 class="page-title">{{ t('home.title') }}</NH1>
-      <div class="header-actions">
-        <NTag v-if="activeTag" type="primary" size="small" round closable @close="clearFilter">
-          #{{ activeTag }}
-        </NTag>
-        <NButton
-          size="small"
-          tertiary
-          :render-icon="renderIcon(SwapVerticalOutline)"
-          @click="sortBy = sortBy === 'date' ? 'title' : 'date'"
-        >
-          {{ sortBy === 'date' ? t('home.sortByDate') : t('home.sortByTitle') }}
-        </NButton>
+  <div class="dashboard">
+    <!-- 顶部欢迎区 -->
+    <section class="dashboard-hero">
+      <div class="hero-left">
+        <NH1 class="hero-title">{{ greeting }}</NH1>
+        <NText class="hero-subtitle">{{ dateStr }}</NText>
+        <NText class="hero-time">{{ timeStr }}</NText>
       </div>
-    </div>
-
-    <div class="articles-list" v-if="displayedMetas.length">
-      <article
-        class="article-card"
-        v-for="meta in displayedMetas"
-        :key="meta.id"
-        @click="goToArticle(meta.id)"
-      >
-        <div class="card-main">
-          <NH2 class="card-title">{{ meta.title }}</NH2>
-          <NText depth="3" class="card-date">{{ formatDate(meta.createdAt) }}</NText>
-          <NText depth="2" class="card-summary">{{ meta.summary }}</NText>
-          <div class="card-tags" v-if="meta.tags.length">
-            <NTag v-for="tag in meta.tags" :key="tag" size="small" :bordered="false" class="card-tag">
-              {{ tag }}
-            </NTag>
+      <div class="hero-right">
+        <div class="weather-card" @click="switchWeather" title="点击切换城市">
+          <NIcon :size="40" class="weather-icon">
+            <component :is="weather.icon" />
+          </NIcon>
+          <div class="weather-info">
+            <span class="weather-temp">{{ weather.temp }}°</span>
+            <span class="weather-desc">{{ weather.city }} · {{ weather.desc }}</span>
+            <span class="weather-extra">{{ weather.low }}° ~ {{ weather.high }}° 湿度 {{ weather.humidity }}%</span>
           </div>
         </div>
-        <NText depth="3" class="card-arrow">{{ t('nav.read') }}</NText>
-      </article>
+      </div>
+    </section>
+
+    <!-- 数据统计：4 卡 -->
+    <section class="dashboard-stats">
+      <div class="stat-card">
+        <NIcon :size="24" class="stat-icon"><DocumentTextOutline /></NIcon>
+        <div class="stat-content">
+          <span class="stat-value">{{ totalArticles }}</span>
+          <span class="stat-label">{{ t('home.statArticles') }}</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <NIcon :size="24" class="stat-icon"><LibraryOutline /></NIcon>
+        <div class="stat-content">
+          <span class="stat-value">{{ totalTags }}</span>
+          <span class="stat-label">{{ t('home.statTags') }}</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <NIcon :size="24" class="stat-icon"><TrendingUpOutline /></NIcon>
+        <div class="stat-content">
+          <span class="stat-value">{{ weekCount }}</span>
+          <span class="stat-label">{{ t('home.statWeek') }}</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <NIcon :size="24" class="stat-icon"><BarChartOutline /></NIcon>
+        <div class="stat-content">
+          <span class="stat-value">{{ activeDays }}</span>
+          <span class="stat-label">{{ t('home.statActiveDays') }}</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 快捷创作 + 最近文章 -->
+    <div class="dashboard-grid">
+      <!-- 左侧：快捷创作 + 工具箱 -->
+      <section class="dashboard-panel">
+        <NH3 class="panel-title">
+          <NIcon :size="18"><PencilOutline /></NIcon>
+          {{ t('home.quickActions') }}
+        </NH3>
+        <NDivider :style="{ margin: '8px 0 12px' }" />
+        <div class="primary-actions">
+          <NButton type="primary" @click="goWrite">
+            <template #icon><NIcon><PencilOutline /></NIcon></template>
+            {{ t('home.recentCreate') }}
+          </NButton>
+          <NButton tertiary @click="goPapers">
+            <template #icon><NIcon><BookOutline /></NIcon></template>
+            {{ t('nav.papers') }}
+          </NButton>
+          <NButton tertiary @click="goJuejin">
+            <template #icon><NIcon><CompassOutline /></NIcon></template>
+            {{ t('nav.juejin') }}
+          </NButton>
+        </div>
+        <NH3 class="panel-subtitle">{{ t('home.toolbox') }}</NH3>
+        <div class="quick-actions">
+          <NTooltip trigger="hover" v-for="tool in quickTools" :key="tool.name" placement="bottom">
+            <template #trigger>
+              <button class="action-btn" :style="{ '--accent': tool.color }">
+                <NIcon :size="22"><component :is="tool.icon" /></NIcon>
+                <span class="action-name">{{ tool.name }}</span>
+              </button>
+            </template>
+            {{ tool.desc }}
+          </NTooltip>
+        </div>
+      </section>
+
+      <!-- 右侧：最近文章 -->
+      <section class="dashboard-panel">
+        <NH3 class="panel-title">
+          <NIcon :size="18"><TimeOutline /></NIcon>
+          {{ t('home.recent') }}
+        </NH3>
+        <NDivider :style="{ margin: '8px 0 12px' }" />
+        <div class="recent-list" v-if="recentArticles.length">
+          <article
+            class="recent-item"
+            v-for="article in recentArticles"
+            :key="article.id"
+            @click="goArticle(article.id)"
+          >
+            <div class="recent-main">
+              <NText class="recent-title">{{ article.title }}</NText>
+              <NText depth="3" class="recent-meta">{{ article.updatedAt?.slice(0, 10) }}</NText>
+            </div>
+            <div class="recent-tags" v-if="article.tags.length">
+              <NTag v-for="tag in article.tags.slice(0, 2)" :key="tag" size="tiny" :bordered="false">
+                {{ tag }}
+              </NTag>
+            </div>
+          </article>
+        </div>
+        <NText depth="3" v-else :style="{ textAlign: 'center', padding: '24px 0', display: 'block' }">
+          {{ t('home.recentEmpty') }}
+          <NButton text type="primary" size="small" @click="goWrite">{{ t('home.recentCreate') }}</NButton>
+        </NText>
+      </section>
     </div>
 
-    <NEmpty v-else :description="t('home.empty')" :style="{ marginTop: '80px' }" />
+    <!-- 写作活跃度 + 每日一言 -->
+    <div class="dashboard-grid">
+      <section class="dashboard-panel">
+        <div class="panel-title-row">
+          <NH3 class="panel-title">
+            <NIcon :size="18"><BarChartOutline /></NIcon>
+            {{ t('home.activity') }}
+          </NH3>
+          <NButton text size="tiny" type="primary" @click="goPapers">{{ t('home.activityViewAll') }} →</NButton>
+        </div>
+        <NDivider :style="{ margin: '8px 0 12px' }" />
+        <div class="heatmap" v-if="activityWeeks.length">
+          <div class="heatmap-cell" v-for="cell in activityWeeks" :key="cell.key"
+               :class="'level-' + cell.level"
+               :title="`${cell.key}: ${cell.count}`"></div>
+        </div>
+        <NText depth="3" v-else :style="{ display: 'block', padding: '12px 0' }">{{ t('home.activityEmpty') }}</NText>
+        <div class="heatmap-legend">
+          <span class="legend-label">{{ t('home.activity') }}</span>
+          <div class="heatmap-cell level-0"></div>
+          <div class="heatmap-cell level-1"></div>
+          <div class="heatmap-cell level-2"></div>
+          <div class="heatmap-cell level-3"></div>
+        </div>
+      </section>
+
+      <section class="dashboard-panel dashboard-quote">
+        <NIcon :size="16" class="quote-icon"><BookOutline /></NIcon>
+        <div class="quote-content">
+          <NText class="quote-text">{{ currentQuote.text }}</NText>
+          <NText depth="3" class="quote-author">—— {{ currentQuote.author }}</NText>
+        </div>
+        <NButton quaternary size="small" class="quote-refresh" @click="shuffleQuote">
+          <template #icon><NIcon :size="14"><RefreshOutline /></NIcon></template>
+          {{ t('home.quoteRefresh') }}
+        </NButton>
+      </section>
+    </div>
+
+    <!-- Footer 状态条 -->
+    <footer class="dashboard-footer">
+      <span>{{ t('home.footerSaved') }} {{ totalArticles }} {{ t('home.statArticles') }}</span>
+      <span class="footer-dot"></span>
+      <span class="footer-synced"><span class="sync-dot"></span>{{ t('home.footerSynced') }}</span>
+      <span class="footer-dot"></span>
+      <span>{{ t('home.footerVersion') }} {{ version }}</span>
+    </footer>
   </div>
 </template>
 
 <style lang="less" scoped>
-.page-header {
+.dashboard {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding-bottom: 1.5em;
+}
+
+// 顶部欢迎区
+.dashboard-hero {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2em;
+  padding: 2em 0 1.5em;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 1.5em;
 }
 
-.page-title {
+.hero-title {
   font-family: var(--font-serif) !important;
-  margin: 0;
+  font-size: 36px;
+  margin: 0 !important;
+  line-height: 1.2;
+  color: var(--color-text);
 }
 
-.header-actions {
+.hero-subtitle {
+  display: block;
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--color-text-tertiary);
+}
+
+.hero-time {
+  display: block;
+  margin-top: 8px;
+  font-size: 24px;
+  font-family: var(--font-mono);
+  color: var(--color-primary);
+  letter-spacing: 0.05em;
+}
+
+.weather-card {
   display: flex;
   align-items: center;
-  gap: 0.8em;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+
+  &:hover {
+    background: var(--color-bg-tertiary);
+  }
 }
 
-.articles-list {
+.weather-icon {
+  color: var(--color-primary);
+}
+
+.weather-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.4;
+}
+
+.weather-temp {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.weather-desc {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.weather-extra {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+}
+
+// 数据统计 4 卡
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 1.5em;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+  transition: background var(--transition-fast), box-shadow var(--transition-fast);
+
+  &:hover {
+    background: var(--color-bg-tertiary);
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+.stat-icon {
+  color: var(--color-primary);
+  opacity: 0.8;
+}
+
+.stat-content {
   display: flex;
   flex-direction: column;
 }
 
-.article-card {
+.stat-value {
+  font-family: var(--font-mono);
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--color-text);
+  line-height: 1.1;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+  margin-top: 2px;
+}
+
+// 双栏栅格
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 1.5em;
+}
+
+.dashboard-panel {
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+  padding: 1.25em 1.5em;
+}
+
+.panel-title {
   display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 !important;
+
+  :deep(.n-icon) {
+    color: var(--color-primary);
+  }
+}
+
+.panel-subtitle {
+  margin: 1em 0 0.6em !important;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.panel-title-row {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: flex-start;
-  padding: var(--sp-5) 0;
-  border-bottom: 1px solid var(--color-border);
-  cursor: pointer;
+}
+
+// 快捷创作主按钮
+.primary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 0.5em;
+}
+
+// 工具箱
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 8px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  transition: padding-left var(--transition-fast);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
+
+  :deep(.n-icon) {
+    color: var(--accent);
+  }
+
+  .action-name {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+  }
+
   &:hover {
-    .card-title {
-      color: var(--color-primary);
+    border-color: var(--accent);
+    background: var(--color-bg-tertiary);
+
+    .action-name {
+      color: var(--accent);
     }
-    .card-arrow {
-      transform: translateX(4px);
+  }
+}
+
+// 最近文章
+.recent-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.recent-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+
+  &:hover {
+    background: var(--color-bg-tertiary);
+
+    .recent-title {
       color: var(--color-primary);
     }
   }
 }
 
-.card-main {
-  flex: 1;
-  padding-right: 1em;
-}
-
-.card-title {
-  margin: 0 0 0.3em !important;
-  font-family: var(--font-serif) !important;
-  transition: color var(--transition-fast);
-}
-
-.card-date {
-  font-size: var(--fs-xs);
-  letter-spacing: 0.02em;
-  color: var(--color-text-tertiary);
-}
-
-.card-summary {
-  line-height: 1.65;
-  margin: 0.5em 0 0.4em;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  font-size: 14px;
-  color: var(--color-text-secondary);
-}
-
-.card-tags {
+.recent-main {
   display: flex;
-  gap: 0.4em;
-  flex-wrap: wrap;
+  flex-direction: column;
+  min-width: 0;
 }
 
-.card-tag {
-  cursor: default;
-  background: var(--color-bg-secondary);
-  color: var(--color-text-secondary);
-  border-radius: var(--radius-sm);
-}
-
-.card-arrow {
-  font-size: 13px;
+.recent-title {
+  font-size: 14px;
+  color: var(--color-text);
   white-space: nowrap;
-  transition: transform var(--transition-fast), color var(--transition-fast);
-  align-self: flex-start;
-  margin-top: 0.3em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recent-meta {
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.recent-tags {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+// 写作活跃度热力图
+.heatmap {
+  display: grid;
+  grid-template-columns: repeat(13, 1fr);
+  grid-template-rows: repeat(7, 1fr);
+  grid-auto-flow: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.heatmap-cell {
+  aspect-ratio: 1 / 1;
+  border-radius: 2px;
+  background: var(--color-bg-tertiary);
+  transition: transform var(--transition-fast);
+
+  &:hover {
+    transform: scale(1.15);
+  }
+}
+
+.heatmap-cell.level-0 { background: var(--color-bg-tertiary); }
+.heatmap-cell.level-1 { background: var(--color-primary-light); }
+.heatmap-cell.level-2 { background: #E97B7B; }
+.heatmap-cell.level-3 { background: var(--color-primary); }
+
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  font-size: 11px;
   color: var(--color-text-tertiary);
+
+  .heatmap-cell {
+    width: 12px;
+    height: 12px;
+  }
+
+  .legend-label {
+    margin-right: 6px;
+  }
+}
+
+// 每日一言
+.dashboard-quote {
+  display: flex;
+  flex-direction: column;
+  border-left: 3px solid var(--color-primary);
+  position: relative;
+}
+
+.quote-icon {
+  color: var(--color-primary);
+  margin-bottom: 8px;
+}
+
+.quote-content {
+  flex: 1;
+}
+
+.quote-text {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--color-text);
+}
+
+.quote-author {
+  display: block;
+  margin-top: 10px;
+  text-align: right;
+  font-size: 12px;
+}
+
+.quote-refresh {
+  align-self: flex-end;
+  margin-top: 10px;
+}
+
+// Footer 状态条
+.dashboard-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding-top: 1em;
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+}
+
+.footer-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--color-text-tertiary);
+  opacity: 0.5;
+}
+
+.footer-synced {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sync-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+}
+
+// 响应式
+@media (max-width: 1100px) {
+  .dashboard-stats {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .dashboard-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-actions {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 </style>

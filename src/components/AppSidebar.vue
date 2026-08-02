@@ -2,6 +2,7 @@
 import { h, type Component } from 'vue'
 import { NButton, NText, NDivider, NTag, NIcon, NTooltip } from 'naive-ui'
 import {
+  HomeOutline,
   DocumentTextOutline,
   PencilOutline,
   InformationCircleOutline,
@@ -36,6 +37,10 @@ function goHome(): void {
   router.push('/')
 }
 
+function goPapers(): void {
+  router.push('/papers')
+}
+
 function goWrite(): void {
   router.push('/editor')
 }
@@ -49,7 +54,7 @@ function goJuejin(): void {
 }
 
 function filterByTag(tag: string): void {
-  router.push({ path: '/', query: { tag } })
+  router.push({ path: '/papers', query: { tag } })
 }
 
 function renderIcon(icon: Component) {
@@ -64,9 +69,37 @@ function renderIcon(icon: Component) {
         <template #trigger>
           <NButton
             class="nav-btn"
-            :type="route.path === '/' && !activeTag ? 'primary' : 'default'"
+            :type="route.path === '/' ? 'primary' : 'default'"
             text
             @click="goHome"
+          >
+            <NIcon :size="20"><HomeOutline /></NIcon>
+          </NButton>
+        </template>
+        {{ t('nav.home') }}
+      </NTooltip>
+      <NButton
+        v-else
+        class="nav-btn"
+        :type="route.path === '/' ? 'primary' : 'default'"
+        :ghost="route.path !== '/'"
+        quaternary
+        block
+        @click="goHome"
+      >
+        <template #icon>
+          <NIcon><HomeOutline /></NIcon>
+        </template>
+        {{ t('nav.home') }}
+      </NButton>
+
+      <NTooltip v-if="collapsed" trigger="hover" placement="right">
+        <template #trigger>
+          <NButton
+            class="nav-btn"
+            :type="route.path === '/papers' ? 'primary' : 'default'"
+            text
+            @click="goPapers"
           >
             <NIcon :size="20"><DocumentTextOutline /></NIcon>
           </NButton>
@@ -76,11 +109,11 @@ function renderIcon(icon: Component) {
       <NButton
         v-else
         class="nav-btn"
-        :type="route.path === '/' && !activeTag ? 'primary' : 'default'"
-        :ghost="!(route.path === '/' && !activeTag)"
+        :type="route.path === '/papers' ? 'primary' : 'default'"
+        :ghost="route.path !== '/papers'"
         quaternary
         block
-        @click="goHome"
+        @click="goPapers"
       >
         <template #icon>
           <NIcon><DocumentTextOutline /></NIcon>

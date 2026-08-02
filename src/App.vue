@@ -95,7 +95,8 @@ onUnmounted(() => {
             :class="{
               'sidebar-collapsed': currentLayout === 'sidebar' && sidebarCollapsed,
               'outline-visible': outlineVisible,
-              'juejin-main': route.path.startsWith('/juejin')
+              'juejin-main': route.path.startsWith('/juejin'),
+              'home-main': route.path === '/'
             }"
           >
             <router-view />
@@ -134,6 +135,11 @@ onUnmounted(() => {
 /* 掘金页：放宽最大宽度以适配瀑布流两列 */
 .app-layout .app-main.juejin-main {
   max-width: 1400px;
+}
+
+/* 首页工作台：放宽最大宽度以容纳四卡与双栏栅格 */
+.app-layout .app-main.home-main {
+  max-width: 1100px;
 }
 
 /* 侧边栏展开：内容在侧边栏右侧的可用空间内居中 */

@@ -62,7 +62,8 @@ interface NavItem {
 }
 
 const navItems = computed<NavItem[]>(() => [
-  { label: t('nav.papers'), key: 'papers', path: '/' },
+  { label: t('nav.home'), key: 'home', path: '/' },
+  { label: t('nav.papers'), key: 'papers', path: '/papers' },
   { label: t('nav.write'), key: 'write', path: '/editor' },
   { label: t('nav.juejin'), key: 'juejin', path: '/juejin' },
   { label: t('nav.about'), key: 'about', path: '/about' },
@@ -83,7 +84,7 @@ const navItems = computed<NavItem[]>(() => [
         :key="item.key"
         quaternary
         size="small"
-        :type="(item.path === '/' && route.path === '/' && !route.query.tag) || (item.path !== '/' && route.path.startsWith(item.path)) ? 'primary' : 'default'"
+        :type="(item.key === 'home' && route.path === '/') || (item.key === 'papers' && route.path === '/papers') || (item.path !== '/' && item.path !== '/papers' && route.path.startsWith(item.path)) ? 'primary' : 'default'"
         @click="router.push(item.path)"
       >
         {{ item.label }}
