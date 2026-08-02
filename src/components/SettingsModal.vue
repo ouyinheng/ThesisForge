@@ -2,7 +2,6 @@
 import { ref, computed } from 'vue'
 import {
   NModal,
-  NCard,
   NH3,
   NText,
   NButton,
@@ -21,7 +20,7 @@ import { useSettingsStore } from '@/stores/settings'
 import { useI18n } from '@/composables/useI18n'
 import { useMessage } from 'naive-ui'
 import { h, type Component } from 'vue'
-import { isDesktop } from '@/services/storage'
+import { isDesktop, selectDirectory } from '@/services/storage'
 
 const settings = useSettingsStore()
 const { t, setLocale, currentLocale: locale } = useI18n()
@@ -50,9 +49,32 @@ const editingPath = ref<boolean>(false)
 const pathDraft = ref<string>('')
 const saving = ref<boolean>(false)
 
-function startEditPath() {
+async function startEditPath() {
+  // 桌面端：直接弹出系统文件夹选择对话框
+  if (isDesktopApp.value) {
+    const picked = await selectDirectory()
+    if (picked) {
+      await applyPath(picked)
+    }
+    return
+  }
+  // Web 端：手动输入
   pathDraft.value = settings.storagePath || ''
   editingPath.value = true
+}
+
+async function applyPath(newPath: string) {
+  if (newPath === settings.storagePath) return
+  saving.value = true
+  try {
+    await settings.changeStoragePath(newPath)
+    message.success(t('pathSaved'))
+    editingPath.value = false
+  } catch (e) {
+    console.error(e)
+  } finally {
+    saving.value = false
+  }
 }
 
 function cancelEditPath() {
@@ -104,15 +126,16 @@ async function resetPath() {
     size="medium"
     :bordered="false"
     :closable="false"
+    :title-style="{ display: 'none' }"
+    :header-style="{ padding: '0' }"
+    :content-style="{ padding: '0' }"
+    :card-style="{ borderRadius: '16px', overflow: 'hidden' }"
     @update:show="(val) => { if (!val) emit('update:show', false) }"
     @esc="emit('update:show', false)"
     @mask-click="emit('update:show', false)"
   >
-    <NCard
-      :style="{ borderRadius: '16px', overflow: 'hidden' }"
-      content-style="padding: 0"
-    >
-      <!-- 标题区 -->
+    <!-- 标题区 -->
+    <template #header>
       <div class="settings-title">
         <NH3 :style="{ margin: 0 }">{{ t('settings') }}</NH3>
         <NButton
@@ -123,9 +146,10 @@ async function resetPath() {
           @click="emit('update:show', false)"
         />
       </div>
+    </template>
 
-      <div class="settings-content">
-        <!-- 主题 -->
+    <div class="settings-content">
+      <!-- 主题 -->
         <div class="setting-row">
           <NText depth="3" class="setting-label">{{ t('theme') }}</NText>
           <NButtonGroup size="small">
@@ -283,7 +307,6 @@ async function resetPath() {
           </template>
         </div>
       </div>
-    </NCard>
   </NModal>
 </template>
 
@@ -292,15 +315,15 @@ async function resetPath() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 22px 14px;
+  padding: 14px 20px 12px;
   border-bottom: 1px solid var(--color-border);
 }
 
 .settings-content {
-  padding: 20px 22px 24px;
+  padding: 16px 20px 20px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--sp-5);
 }
 
 .setting-row {
@@ -310,17 +333,19 @@ async function resetPath() {
 }
 
 .setting-label {
-  font-size: 13px;
+  font-size: var(--fs-sm);
   font-weight: 500;
+  color: var(--color-text-secondary);
 }
 
 .setting-path-block {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding-top: 4px;
-  border-top: 1px solid var(--color-border);
-  margin-top: 4px;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
 }
 
 .path-header {

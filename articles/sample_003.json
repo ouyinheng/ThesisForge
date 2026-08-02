@@ -1,0 +1,12 @@
+{
+  "id": "sample_003",
+  "title": "The PageRank Citation Ranking: Bringing Order to the Web",
+  "summary": "PageRank is a method for computing a ranking for every Web page based on the graph of the Web.",
+  "content": "<h2>Abstract</h2><p>The importance of a Web page is an inherently subjective matter. But there is still much that can be said objectively about the relative importance of Web pages. In this paper, we present PageRank, a method for computing a ranking for every Web page based on the graph of the Web.</p><h2>1. Introduction</h2><p>The World Wide Web creates many new challenges for information retrieval. The Web is a vast collection of completely uncontrolled heterogeneous documents.</p><h2>2. A Ranking for Every Page</h2><p>We assume page A has pages T1...Tn which point to it. The parameter d is a damping factor which can be set between 0 and 1.</p><h2>Conclusions</h2><p>We have developed PageRank, a link analysis algorithm that provides an objective measure of the importance of Web pages.</p>",
+  "tags": [
+    "Theory",
+    "Systems"
+  ],
+  "createdAt": "1998-01-29T00:00:00.000Z",
+  "updatedAt": "1998-01-29T00:00:00.000Z"
+}

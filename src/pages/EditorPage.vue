@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useBlogStore } from '@/stores/blog'
@@ -32,10 +32,32 @@ const storagePathSet = computed(() => !isDesktopApp || !!settings.storagePath?.t
 const isEditing = computed(() => !!route.params.id)
 const pageTitle = computed(() => isEditing.value ? t('editor.editTitle') : t('editor.newTitle'))
 
+// 编辑器实例的唯一 key：编辑模式用文章 id，新建模式用带时间戳的唯一值确保每次新建都重建编辑器
+const editorKey = ref(route.params.id as string || `new-${Date.now()}`)
+
 const title = ref('')
 const summary = ref('')
 const content = ref('')
 const tags = ref<string[]>([])
+
+// 重置表单到新建状态
+function resetForm() {
+  title.value = ''
+  summary.value = ''
+  content.value = ''
+  tags.value = []
+  editorKey.value = `new-${Date.now()}`
+}
+
+// 监听路由变化：编辑→新建 或 新建→编辑 时确保表单状态正确
+watch(
+  () => route.path,
+  () => {
+    if (!isEditing.value) {
+      resetForm()
+    }
+  }
+)
 
 const suggestedTags = ['Machine Learning', 'Systems', 'Theory', 'NLP', 'Databases', 'Security', 'Networks', 'AI']
 
@@ -143,7 +165,7 @@ function openSettings(): void {
 
       <NDivider />
 
-      <TiptapEditor v-model="content" :placeholder="'Start writing your paper...'" />
+      <TiptapEditor :key="editorKey" v-model="content" :placeholder="'Start writing your paper...'" />
 
       <div class="tag-section">
         <NText depth="2" class="tag-label">Tags</NText>
@@ -191,39 +213,51 @@ function openSettings(): void {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5em;
+  margin-bottom: var(--sp-5);
+
+  :deep(.n-button) {
+    border-radius: var(--radius-sm);
+    transition: background var(--transition-fast);
+  }
 }
 
 .toolbar-title {
   font-size: 14px;
   font-weight: normal;
+  color: var(--color-text-secondary);
 }
 
 .editor-form {
   display: flex;
   flex-direction: column;
-  gap: 1em;
+  gap: var(--sp-4);
 }
 
 .title-input {
   font-family: var(--font-serif) !important;
+  :deep(.n-input__input-el) {
+    font-size: var(--fs-xl);
+    font-weight: 600;
+  }
 }
 
 .summary-textarea {
   :deep(.n-input__textarea-el) {
     background: var(--color-bg-secondary);
+    border-radius: var(--radius-sm);
   }
 }
 
 .tag-section {
-  margin-top: 1.5em;
-  padding-top: 1em;
+  margin-top: var(--sp-5);
+  padding-top: var(--sp-4);
   border-top: 1px solid var(--color-border);
 }
 
 .tag-label {
-  font-size: 13px;
+  font-size: var(--fs-sm);
   font-weight: 500;
+  color: var(--color-text-secondary);
   margin-bottom: 0.6em;
   display: block;
 }
@@ -237,7 +271,7 @@ function openSettings(): void {
 }
 
 .suggestions-label {
-  font-size: 12px;
+  font-size: var(--fs-xs);
 }
 
 .suggestion-btn {

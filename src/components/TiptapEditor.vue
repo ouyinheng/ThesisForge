@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useEditor, EditorContent } from '@tiptap/vue-3'
-import { watch } from 'vue'
+import { watch, onMounted, nextTick } from 'vue'
+import { NIcon } from 'naive-ui'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import Link from '@tiptap/extension-link'
@@ -18,6 +19,18 @@ import TableHeader from '@tiptap/extension-table-header'
 import TextAlign from '@tiptap/extension-text-align'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import { all, createLowlight } from 'lowlight'
+import {
+  ListOutline,
+  ListCircleOutline,
+  CheckboxOutline,
+  TextOutline,
+  CodeOutline,
+  LinkOutline,
+  ImageOutline,
+  GridOutline,
+  ArrowUndoOutline,
+  ArrowRedoOutline,
+} from '@vicons/ionicons5'
 
 const props = defineProps<{
   modelValue: string
@@ -55,11 +68,26 @@ const editor = useEditor({
   },
 })
 
+// 确保编辑器视图在 DOM 挂载后正确附加，避免 immediatelyRender 导致的时序问题
+onMounted(() => {
+  nextTick(() => {
+    if (editor.value) {
+      // 触发编辑器视图重新关联 DOM，确保 contenteditable 正常工作
+      const view = editor.value.view
+      if (view && !view.hasFocus()) {
+        view.dom.focus()
+        view.dom.blur()
+      }
+    }
+  })
+})
+
 watch(
   () => props.modelValue,
   (newContent) => {
     if (editor.value && newContent !== editor.value.getHTML()) {
-      editor.value.commands.setContent(newContent)
+      // 第二个参数 false: 设置内容时不触发 onUpdate，避免与输入回写形成循环导致光标丢失
+      editor.value.commands.setContent(newContent, false)
     }
   }
 )
@@ -103,20 +131,20 @@ function addImage(): void {
       </button>
       <span class="tool-divider"></span>
       <button class="tool-btn" @click="editor.chain().focus().toggleBulletList().run()" :class="{ active: editor.isActive('bulletList') }">
-        <span class="i-carbon:list"></span>
+        <NIcon :size="14"><ListOutline /></NIcon>
       </button>
       <button class="tool-btn" @click="editor.chain().focus().toggleOrderedList().run()" :class="{ active: editor.isActive('orderedList') }">
-        <span class="i-carbon:list-numbered"></span>
+        <NIcon :size="14"><ListCircleOutline /></NIcon>
       </button>
       <button class="tool-btn" @click="editor.chain().focus().toggleTaskList().run()" :class="{ active: editor.isActive('taskList') }">
-        <span class="i-carbon:checkbox-checked"></span>
+        <NIcon :size="14"><CheckboxOutline /></NIcon>
       </button>
       <span class="tool-divider"></span>
       <button class="tool-btn" @click="editor.chain().focus().toggleBlockquote().run()" :class="{ active: editor.isActive('blockquote') }">
-        <span class="i-carbon:quotes"></span>
+        <NIcon :size="14"><TextOutline /></NIcon>
       </button>
       <button class="tool-btn" @click="editor.chain().focus().toggleCodeBlock().run()" :class="{ active: editor.isActive('codeBlock') }">
-        <span class="i-carbon:code"></span>
+        <NIcon :size="14"><CodeOutline /></NIcon>
       </button>
       <span class="tool-divider"></span>
       <button class="tool-btn" @click="editor.chain().focus().setTextAlign('left').run()">L</button>
@@ -124,20 +152,20 @@ function addImage(): void {
       <button class="tool-btn" @click="editor.chain().focus().setTextAlign('right').run()">R</button>
       <span class="tool-divider"></span>
       <button class="tool-btn" @click="setLink" :class="{ active: editor.isActive('link') }">
-        <span class="i-carbon:link"></span>
+        <NIcon :size="14"><LinkOutline /></NIcon>
       </button>
       <button class="tool-btn" @click="addImage">
-        <span class="i-carbon:image"></span>
+        <NIcon :size="14"><ImageOutline /></NIcon>
       </button>
       <button class="tool-btn" @click="editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()">
-        <span class="i-carbon:table"></span>
+        <NIcon :size="14"><GridOutline /></NIcon>
       </button>
       <span class="tool-divider"></span>
       <button class="tool-btn" @click="editor.chain().focus().undo().run()">
-        <span class="i-carbon:undo"></span>
+        <NIcon :size="14"><ArrowUndoOutline /></NIcon>
       </button>
       <button class="tool-btn" @click="editor.chain().focus().redo().run()">
-        <span class="i-carbon:redo"></span>
+        <NIcon :size="14"><ArrowRedoOutline /></NIcon>
       </button>
     </div>
     <EditorContent :editor="editor" class="tiptap-editor" />
@@ -147,8 +175,9 @@ function addImage(): void {
 <style lang="less" scoped>
 .tiptap-wrapper {
   border: 1px solid var(--color-border);
-  border-radius: 4px;
+  border-radius: var(--radius-md);
   overflow: hidden;
+  background: var(--color-bg);
   &:focus-within {
     border-color: var(--color-primary);
     box-shadow: 0 0 0 2px var(--color-primary-light);
@@ -156,12 +185,15 @@ function addImage(): void {
 }
 
 .toolbar {
+  position: sticky;
+  top: 48px;
+  z-index: 10;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 0.2em;
   padding: 0.5em 0.8em;
-  background: var(--color-bg-secondary);
+  background: var(--color-bg);
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -174,9 +206,10 @@ function addImage(): void {
   border: none;
   background: transparent;
   color: var(--color-text-secondary);
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   font-size: 13px;
   font-weight: 600;
+  transition: background var(--transition-fast), color var(--transition-fast);
   &:hover {
     background: var(--color-bg-tertiary);
     color: var(--color-text);
@@ -207,17 +240,30 @@ function addImage(): void {
 }
 
 .tiptap-editor {
-  padding: 1em 1.2em;
+  padding: var(--sp-5);
   font-family: var(--font-serif);
-  font-size: 16px;
+  font-size: var(--fs-base);
   line-height: 1.8;
+  color: var(--color-text);
+}
+
+/* 占位符 */
+.tiptap-editor .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: var(--color-text-tertiary);
 }
 </style>
 
 <style>
 .tiptap-editor .ProseMirror {
-  min-height: 360px !important;
+  min-height: 60vh !important;
   outline: none;
+  &:focus {
+    outline: none;
+  }
 }
 .tiptap-editor .ProseMirror p {
   margin-bottom: 0.8em;

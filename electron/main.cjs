@@ -1,7 +1,8 @@
-const { app, BrowserWindow, ipcMain, systemPreferences } = require('electron')
+const { app, BrowserWindow, ipcMain, systemPreferences, dialog } = require('electron')
 const path = require('path')
 const fs = require('fs/promises')
 const os = require('os')
+const https = require('https')
 
 const isDev = !app.isPackaged
 const isMac = process.platform === 'darwin'
@@ -107,6 +108,16 @@ function setupIpcHandlers() {
     currentStoragePath = newPath.trim()
   })
 
+  // 弹出系统文件夹选择对话框，返回用户选中的目录路径（取消则为空字符串）
+  ipcMain.handle('file:selectDirectory', async () => {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: '选择存储文件夹',
+      properties: ['openDirectory', 'createDirectory'],
+    })
+    if (result.canceled || result.filePaths.length === 0) return ''
+    return result.filePaths[0]
+  })
+
   // 迁移数据：从旧存储路径复制文件到新路径
   ipcMain.handle('file:migrateStorage', async (_, fromPath, toPath) => {
     if (!fromPath || !toPath || fromPath === toPath) return
@@ -155,6 +166,63 @@ function setupIpcHandlers() {
 
   ipcMain.handle('env:isElectron', async () => {
     return true
+  })
+
+  // 掘金接口代理：渲染进程受 CORS 限制，由主进程转发（主进程不受同源策略约束）
+  // payload: { url, method?, headers?, body? }
+  ipcMain.handle('juejin:fetch', async (_, payload) => {
+    const { url, method = 'POST', headers = {}, body } = payload || {}
+    if (!url) return { ok: false, error: 'missing url' }
+    return new Promise((resolve) => {
+      const req = https.request(
+        url,
+        {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            'User-Agent': 'Mozilla/5.0',
+            ...headers,
+          },
+        },
+        (res) => {
+          let data = ''
+          res.on('data', (chunk) => (data += chunk))
+          res.on('end', () => {
+            try {
+              resolve({ ok: true, data: JSON.parse(data) })
+            } catch {
+              resolve({ ok: false, error: 'parse error' })
+            }
+          })
+        }
+      )
+      req.on('error', (err) => resolve({ ok: false, error: String(err) }))
+      if (body) req.write(typeof body === 'string' ? body : JSON.stringify(body))
+      req.end()
+    })
+  })
+
+  // 抓取掘金文章页 HTML（用于抽取正文，规避 CORS 与详情接口登录限制）
+  ipcMain.handle('juejin:getPage', async (_, pageUrl) => {
+    if (!pageUrl || typeof pageUrl !== 'string') return { ok: false, error: 'missing url' }
+    return new Promise((resolve) => {
+      const req = https.get(
+        pageUrl,
+        {
+          headers: {
+            'User-Agent':
+              'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept-Language': 'zh-CN,zh;q=0.9',
+          },
+        },
+        (res) => {
+          let data = ''
+          res.on('data', (chunk) => (data += chunk))
+          res.on('end', () => resolve({ ok: true, data }))
+        }
+      )
+      req.on('error', (err) => resolve({ ok: false, error: String(err) }))
+    })
   })
 
   // 窗口控制 IPC

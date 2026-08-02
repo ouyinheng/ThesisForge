@@ -1,0 +1,12 @@
+{
+  "id": "sample_002",
+  "title": "MapReduce: Simplified Data Processing on Large Clusters",
+  "summary": "MapReduce is a programming model and an associated implementation for processing and generating large data sets. Users specify a map function and a reduce function.",
+  "content": "<h2>Abstract</h2><p>MapReduce is a programming model and an associated implementation for processing and generating large data sets. Users specify a map function that processes a key/value pair to generate a set of intermediate key/value pairs, and a reduce function that merges all intermediate values associated with the same intermediate key.</p><h2>1. Introduction</h2><p>Over the past five years, the authors and many others at Google have implemented hundreds of special-purpose computations that process large amounts of raw data.</p><h2>2. Programming Model</h2><p>The computation takes a set of input key/value pairs, and produces a set of output key/value pairs. The user of the MapReduce library expresses the computation as two functions: Map and Reduce.</p><h2>Conclusion</h2><p>The MapReduce programming model has been successfully used at Google for many different purposes including web search, machine translation, and machine learning.</p>",
+  "tags": [
+    "Systems",
+    "Databases"
+  ],
+  "createdAt": "2004-12-01T00:00:00.000Z",
+  "updatedAt": "2004-12-01T00:00:00.000Z"
+}

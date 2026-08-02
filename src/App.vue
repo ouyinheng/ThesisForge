@@ -21,11 +21,14 @@ watch(sidebarCollapsed, (val) => {
   localStorage.setItem('sidebarCollapsed', String(val))
 })
 
-// 文章页自动收起侧边栏
+// 文章页/掘金内容页自动收起侧边栏
 watch(
   () => route.path,
   (path) => {
-    if (currentLayout.value === 'sidebar' && path.startsWith('/article/')) {
+    if (
+      currentLayout.value === 'sidebar' &&
+      (path.startsWith('/article/') || path.startsWith('/juejin/'))
+    ) {
       sidebarCollapsed.value = true
     }
   }
@@ -65,7 +68,8 @@ if (typeof window !== 'undefined') {
             class="app-main"
             :class="{
               'sidebar-collapsed': currentLayout === 'sidebar' && sidebarCollapsed,
-              'outline-visible': outlineVisible
+              'outline-visible': outlineVisible,
+              'juejin-main': route.path.startsWith('/juejin')
             }"
           >
             <router-view />
@@ -100,6 +104,11 @@ if (typeof window !== 'undefined') {
   margin-right: auto;
 }
 
+/* 掘金页：放宽最大宽度以适配瀑布流两列 */
+.app-layout .app-main.juejin-main {
+  max-width: 1400px;
+}
+
 /* 侧边栏展开：内容在侧边栏右侧的可用空间内居中 */
 .app-layout.sidebar .app-main {
   margin-left: max(220px, calc((100vw - 820px) / 2));
@@ -127,6 +136,6 @@ if (typeof window !== 'undefined') {
 /* Electron 自定义标题栏时留出红绿灯空间 */
 .app-layout.custom-titlebar .app-body {
   margin-top: 0;
-  padding-top: 48px;
+  padding-top: 60px;
 }
 </style>

@@ -109,17 +109,17 @@ function renderIcon(icon: Component) {
 // 导出下拉菜单
 const exportOptions = computed<DropdownOption[]>(() => [
   {
-    label: 'Markdown',
+    label: t('article.exportMarkdown'),
     key: 'markdown',
     icon: renderIcon(DocumentTextOutline),
   },
   {
-    label: 'PNG 图片',
+    label: t('article.exportImage'),
     key: 'image',
     icon: renderIcon(ImageOutline),
   },
   {
-    label: 'PDF 文档',
+    label: t('article.exportPDF'),
     key: 'pdf',
     icon: renderIcon(DocumentOutline),
   },
@@ -223,7 +223,7 @@ onMounted(async () => {
             :loading="exporting"
             :render-icon="renderIcon(DownloadOutline)"
           >
-            导出
+            {{ t('article.export') }}
           </NButton>
         </NDropdown>
         <NButton
@@ -297,13 +297,14 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   color: var(--color-text-secondary);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-sm);
   z-index: 48;
-  transition: background 0.15s, color 0.15s, left 0.2s;
+  transition: background var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), left 0.2s;
 
   &:hover {
-    background: var(--bg-hover);
+    background: var(--color-bg-tertiary);
     color: var(--color-text);
+    box-shadow: var(--shadow-md);
   }
 }
 
@@ -315,7 +316,12 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5em;
+  margin-bottom: var(--sp-5);
+
+  :deep(.n-button) {
+    border-radius: var(--radius-sm);
+    transition: background var(--transition-fast), color var(--transition-fast);
+  }
 }
 
 .action-group {
@@ -327,6 +333,7 @@ onMounted(async () => {
 .delete-btn {
   &:hover {
     color: #dc2626 !important;
+    background: var(--color-quote-bg) !important;
   }
 }
 
@@ -338,26 +345,32 @@ onMounted(async () => {
 }
 
 .export-target {
-  padding: 1.5em;
+  padding: var(--sp-7) var(--sp-6);
   background: var(--color-bg);
-  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
 }
 
 .article-header {
-  margin-bottom: 1.5em;
+  margin-bottom: var(--sp-5);
 }
 
 .article-title {
   font-family: var(--font-serif) !important;
+  font-size: var(--fs-2xl);
   line-height: 1.25;
+  letter-spacing: -0.01em;
   margin-bottom: 0.5em !important;
+  color: var(--color-text);
 }
 
 .article-meta {
   display: flex;
   align-items: center;
   gap: 0;
-  font-size: 13px;
+  font-size: var(--fs-sm);
+  color: var(--color-text-tertiary);
   margin-bottom: 0.6em;
 }
 
@@ -368,14 +381,19 @@ onMounted(async () => {
 .article-tag {
   margin-right: 6px;
   margin-top: 0.3em;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-sm);
 }
 
 .article-summary-block {
-  border-left: 3px solid var(--color-quote-border);
-  padding: 0.6em 1.2em;
+  border-left: 3px solid var(--color-primary);
+  padding: 0.7em 1.2em;
   background: var(--color-quote-bg);
-  margin-bottom: 1.5em;
+  margin-bottom: var(--sp-5);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   font-style: italic;
+  color: var(--color-text-secondary);
 }
 
 .article-body {

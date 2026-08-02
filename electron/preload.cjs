@@ -9,7 +9,10 @@ contextBridge.exposeInMainWorld('__fileBridge', {
   getUserDataPath: () => ipcRenderer.invoke('file:userDataPath'),
   getStoragePath: () => ipcRenderer.invoke('file:getStoragePath'),
   setStoragePath: (newPath) => ipcRenderer.invoke('file:setStoragePath', newPath),
+  selectDirectory: () => ipcRenderer.invoke('file:selectDirectory'),
   migrateStorage: (fromPath, toPath) => ipcRenderer.invoke('file:migrateStorage', fromPath, toPath),
+  juejinFetch: (body) => ipcRenderer.invoke('juejin:fetch', body),
+  juejinGetPage: (url) => ipcRenderer.invoke('juejin:getPage', url),
 })
 
 // 窗口管理桥接

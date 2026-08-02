@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, type Component } from 'vue'
-import { NButton, NButtonGroup, NIcon } from 'naive-ui'
+import { NButton, NButtonGroup, NIcon, NTooltip } from 'naive-ui'
 import {
   SunnyOutline,
   MoonOutline,
@@ -64,12 +64,18 @@ interface NavItem {
 const navItems = computed<NavItem[]>(() => [
   { label: t('nav.papers'), key: 'papers', path: '/' },
   { label: t('nav.write'), key: 'write', path: '/editor' },
+  { label: t('nav.juejin'), key: 'juejin', path: '/juejin' },
   { label: t('nav.about'), key: 'about', path: '/about' },
 ])
 </script>
 
 <template>
   <header class="app-header">
+    <!-- 品牌 -->
+    <div class="header-brand" :class="{ 'brand-hidden': currentLayout === 'topbar' }">
+      PaperBlog
+    </div>
+
     <!-- 顶栏模式下展示导航 -->
     <nav class="header-nav" v-if="currentLayout === 'topbar'">
       <NButton
@@ -93,30 +99,44 @@ const navItems = computed<NavItem[]>(() => [
     <!-- 右侧：工具按钮 -->
     <div class="header-right">
       <NButtonGroup size="small">
-        <NButton
-          tertiary
-          :render-icon="renderIcon(currentLayout === 'sidebar' ? ReaderOutline : ExpandOutline)"
-          @click="toggleLayout"
-        >
-          {{ t('layout') }}
-        </NButton>
-        <NButton
-          quaternary
-          :render-icon="renderIcon(currentTheme === 'light' ? SunnyOutline : MoonOutline)"
-          @click="toggleTheme"
-        >
-          {{ t(`display.${currentTheme}`) }}
-        </NButton>
-        <NButton quaternary @click="toggleLocale">
-          {{ currentLocale === 'zh' ? '中' : 'EN' }}
-        </NButton>
-        <NButton
-          quaternary
-          :render-icon="renderIcon(SettingsOutline)"
-          @click="emit('openSettings')"
-        >
+        <NTooltip trigger="hover" placement="bottom">
+          <template #trigger>
+            <NButton
+              tertiary
+              :render-icon="renderIcon(currentLayout === 'sidebar' ? ReaderOutline : ExpandOutline)"
+              @click="toggleLayout"
+            />
+          </template>
+          {{ currentLayout === 'sidebar' ? '侧边栏布局' : '顶栏布局' }}
+        </NTooltip>
+        <NTooltip trigger="hover" placement="bottom">
+          <template #trigger>
+            <NButton
+              quaternary
+              :render-icon="renderIcon(currentTheme === 'light' ? SunnyOutline : MoonOutline)"
+              @click="toggleTheme"
+            />
+          </template>
+          {{ currentTheme === 'light' ? '切换为暗色' : '切换为亮色' }}
+        </NTooltip>
+        <NTooltip trigger="hover" placement="bottom">
+          <template #trigger>
+            <NButton quaternary @click="toggleLocale">
+              {{ settings.locale === 'zh' ? '中' : 'EN' }}
+            </NButton>
+          </template>
+          {{ settings.locale === 'zh' ? '切换为英文' : 'Switch to 中文' }}
+        </NTooltip>
+        <NTooltip trigger="hover" placement="bottom">
+          <template #trigger>
+            <NButton
+              quaternary
+              :render-icon="renderIcon(SettingsOutline)"
+              @click="emit('openSettings')"
+            />
+          </template>
           {{ t('settings') }}
-        </NButton>
+        </NTooltip>
       </NButtonGroup>
 
       <!-- Windows 窗口控制 -->
@@ -166,6 +186,22 @@ const navItems = computed<NavItem[]>(() => [
   -webkit-app-region: drag;
 }
 
+.header-brand {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--color-text);
+  white-space: nowrap;
+  transition: opacity var(--transition);
+
+  &.brand-hidden {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+  }
+}
+
 .header-nav {
   display: flex;
   gap: 0.5em;
@@ -186,6 +222,11 @@ const navItems = computed<NavItem[]>(() => [
   align-items: center;
   gap: 0.5em;
   -webkit-app-region: no-drag;
+
+  :deep(.n-button) {
+    border-radius: var(--radius-sm);
+    transition: background var(--transition-fast), color var(--transition-fast);
+  }
 }
 
 /* Windows 窗口控制按钮 */

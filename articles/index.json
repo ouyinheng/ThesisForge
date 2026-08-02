@@ -1,0 +1,35 @@
+[
+  {
+    "id": "sample_001",
+    "title": "Attention Is All You Need",
+    "summary": "The dominant sequence transduction models are based on complex recurrent or convolutional neural networks that include an encoder and a decoder. We propose a new simple network architecture, the Transformer.",
+    "tags": [
+      "Machine Learning",
+      "NLP"
+    ],
+    "createdAt": "2017-06-12T00:00:00.000Z",
+    "updatedAt": "2017-06-12T00:00:00.000Z"
+  },
+  {
+    "id": "sample_002",
+    "title": "MapReduce: Simplified Data Processing on Large Clusters",
+    "summary": "MapReduce is a programming model and an associated implementation for processing and generating large data sets. Users specify a map function and a reduce function.",
+    "tags": [
+      "Systems",
+      "Databases"
+    ],
+    "createdAt": "2004-12-01T00:00:00.000Z",
+    "updatedAt": "2004-12-01T00:00:00.000Z"
+  },
+  {
+    "id": "sample_003",
+    "title": "The PageRank Citation Ranking: Bringing Order to the Web",
+    "summary": "PageRank is a method for computing a ranking for every Web page based on the graph of the Web.",
+    "tags": [
+      "Theory",
+      "Systems"
+    ],
+    "createdAt": "1998-01-29T00:00:00.000Z",
+    "updatedAt": "1998-01-29T00:00:00.000Z"
+  }
+]

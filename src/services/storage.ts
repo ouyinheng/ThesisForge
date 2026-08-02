@@ -147,6 +147,19 @@ export async function migrateStorage(fromPath: string, toPath: string): Promise<
   await window.__fileBridge!.migrateStorage(fromPath, toPath)
 }
 
+/**
+ * 弹出系统文件夹选择对话框（仅桌面端有效）。
+ * 返回选中的目录路径；用户取消或环境不支持时返回空字符串。
+ */
+export async function selectDirectory(): Promise<string> {
+  if (!isFileSystemAvailable()) return ''
+  try {
+    return (await window.__fileBridge!.selectDirectory()) || ''
+  } catch {
+    return ''
+  }
+}
+
 // ---------------------------------------------------------------------------
 // 底层存储后端
 // ---------------------------------------------------------------------------

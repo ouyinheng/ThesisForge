@@ -125,9 +125,11 @@ function renderIcon(icon: Component) {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 1.5em 0;
+  padding: var(--sp-5) 0;
   border-bottom: 1px solid var(--color-border);
   cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: padding-left var(--transition-fast);
   &:hover {
     .card-title {
       color: var(--color-primary);
@@ -147,20 +149,24 @@ function renderIcon(icon: Component) {
 .card-title {
   margin: 0 0 0.3em !important;
   font-family: var(--font-serif) !important;
+  transition: color var(--transition-fast);
 }
 
 .card-date {
-  font-size: 13px;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.02em;
+  color: var(--color-text-tertiary);
 }
 
 .card-summary {
   line-height: 1.65;
-  margin: 0.4em 0 0.3em;
+  margin: 0.5em 0 0.4em;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   font-size: 14px;
+  color: var(--color-text-secondary);
 }
 
 .card-tags {
@@ -171,13 +177,17 @@ function renderIcon(icon: Component) {
 
 .card-tag {
   cursor: default;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-sm);
 }
 
 .card-arrow {
-  font-size: 14px;
+  font-size: 13px;
   white-space: nowrap;
-  transition: all 0.2s;
+  transition: transform var(--transition-fast), color var(--transition-fast);
   align-self: flex-start;
   margin-top: 0.3em;
+  color: var(--color-text-tertiary);
 }
 </style>

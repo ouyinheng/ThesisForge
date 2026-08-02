@@ -6,11 +6,16 @@ const messages = {
     nav: {
       papers: '全部论文',
       write: '写文章',
+      juejin: '掘金',
       about: '关于',
       read: '阅读全文',
       back: '返回',
       publish: '发布文章',
       articleCount: '篇论文',
+    },
+    juejin: {
+      recommend: '推荐',
+      latest: '最新',
     },
     home: {
       title: '全部论文',
@@ -24,6 +29,10 @@ const messages = {
       edit: '编辑',
       confirmDelete: '确定要删除这篇文章吗？此操作不可撤销。',
       readTime: '分钟阅读',
+      export: '导出',
+      exportMarkdown: 'Markdown',
+      exportImage: 'PNG 图片',
+      exportPDF: 'PDF 文档',
     },
     editor: {
       newTitle: '新建论文',
@@ -77,11 +86,16 @@ const messages = {
     nav: {
       papers: 'Papers',
       write: 'Write',
+      juejin: 'Juejin',
       about: 'About',
       read: 'Read →',
       back: 'Back',
       publish: 'Publish',
       articleCount: 'papers',
+    },
+    juejin: {
+      recommend: 'Recommended',
+      latest: 'Latest',
     },
     home: {
       title: 'All Papers',
@@ -96,6 +110,10 @@ const messages = {
       confirmDelete:
         'Are you sure you want to delete this article? This action cannot be undone.',
       readTime: 'min read',
+      export: 'Export',
+      exportMarkdown: 'Markdown',
+      exportImage: 'PNG Image',
+      exportPDF: 'PDF Document',
     },
     editor: {
       newTitle: 'New Paper',

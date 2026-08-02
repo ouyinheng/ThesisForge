@@ -5,6 +5,7 @@ import {
   DocumentTextOutline,
   PencilOutline,
   InformationCircleOutline,
+  NewspaperOutline,
   ChevronBackOutline,
   ChevronForwardOutline,
 } from '@vicons/ionicons5'
@@ -41,6 +42,10 @@ function goWrite(): void {
 
 function goAbout(): void {
   router.push('/about')
+}
+
+function goJuejin(): void {
+  router.push('/juejin')
 }
 
 function filterByTag(tag: string): void {
@@ -138,6 +143,34 @@ function renderIcon(icon: Component) {
         </template>
         {{ t('nav.about') }}
       </NButton>
+
+      <NTooltip v-if="collapsed" trigger="hover" placement="right">
+        <template #trigger>
+          <NButton
+            class="nav-btn"
+            :type="route.path === '/juejin' ? 'primary' : 'default'"
+            text
+            @click="goJuejin"
+          >
+            <NIcon :size="20"><NewspaperOutline /></NIcon>
+          </NButton>
+        </template>
+        {{ t('nav.juejin') }}
+      </NTooltip>
+      <NButton
+        v-else
+        class="nav-btn"
+        :type="route.path === '/juejin' ? 'primary' : 'default'"
+        :ghost="!(route.path === '/juejin')"
+        quaternary
+        block
+        @click="goJuejin"
+      >
+        <template #icon>
+          <NIcon><NewspaperOutline /></NIcon>
+        </template>
+        {{ t('nav.juejin') }}
+      </NButton>
     </nav>
 
     <NDivider v-if="blogStore.allTags.length && !collapsed" :style="{ margin: '16px 0 8px' }" />
@@ -150,6 +183,10 @@ function renderIcon(icon: Component) {
           :key="tag.name"
           :type="activeTag === tag.name ? 'primary' : 'default'"
           size="small"
+          :bordered="false"
+          :color="activeTag === tag.name
+            ? { color: 'var(--color-primary-light)', textColor: 'var(--color-primary)' }
+            : undefined"
           checkable
           :checked="activeTag === tag.name"
           @update:checked="() => filterByTag(tag.name)"
@@ -186,7 +223,8 @@ function renderIcon(icon: Component) {
   left: 0;
   display: flex;
   flex-direction: column;
-  padding: 4em 0.8em 1.5em;
+  /* 顶部留出顶栏高度(48px) + 呼吸感 */
+  padding: 60px 0.8em 1.5em;
   background: var(--color-bg-secondary);
   border-right: 1px solid var(--color-border);
   overflow: hidden;
@@ -196,7 +234,7 @@ function renderIcon(icon: Component) {
 
 /* Electron 自定义标题栏时需要顶部留白给红绿灯 */
 .app-layout.custom-titlebar .sidebar {
-  padding-top: 3.6em;
+  padding-top: 76px;
 }
 
 .sidebar.collapsed {
@@ -207,7 +245,7 @@ function renderIcon(icon: Component) {
 }
 
 .app-layout.custom-titlebar .sidebar.collapsed {
-  padding-top: 3.6em;
+  padding-top: 76px;
 }
 
 .sidebar.collapsed .sidebar-nav {
@@ -218,8 +256,8 @@ function renderIcon(icon: Component) {
   width: 36px;
   height: 36px;
   padding: 0;
-  justify-content: center;
-  border-radius: 8px;
+  justify-content: center !important;
+  border-radius: var(--radius-sm);
 }
 
 .sidebar-nav {
@@ -227,10 +265,31 @@ function renderIcon(icon: Component) {
   flex-direction: column;
   gap: 4px;
   flex-shrink: 0;
+  width: 100%;
 }
 
 .nav-btn {
   justify-content: flex-start !important;
+  align-items: center !important;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast), color var(--transition-fast);
+
+  /* 图标与文字垂直居中对齐 */
+  :deep(.n-icon),
+  :deep(svg) {
+    vertical-align: middle;
+  }
+
+  /* 非激活导航项：hover 显示浅底 */
+  &:not(.n-button--primary-type):hover {
+    background: var(--color-bg-tertiary) !important;
+  }
+
+  /* 激活态：浅 primary 底 + primary 文字 */
+  &.n-button--primary-type {
+    background: var(--color-primary-light) !important;
+    color: var(--color-primary) !important;
+  }
 }
 
 .sidebar-tags {
@@ -245,6 +304,7 @@ function renderIcon(icon: Component) {
   letter-spacing: 0.05em;
   display: block;
   margin-bottom: 8px;
+  color: var(--color-text-tertiary);
 }
 
 .tags-list {
@@ -260,7 +320,9 @@ function renderIcon(icon: Component) {
 
 .sidebar-footer {
   padding-top: 1em;
-  font-size: 13px;
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+  letter-spacing: 0.02em;
   border-top: 1px solid var(--color-border);
   text-align: center;
   flex-shrink: 0;
