@@ -1,0 +1,134 @@
+:root {
+  --color-primary: #D12F2F;
+  --color-primary-hover: #B91C1C;
+  --color-primary-light: #FEE2E2;
+  --color-text: #1a1a2e;
+  --color-text-secondary: #4a5568;
+  --color-text-tertiary: #718096;
+  --color-bg: #ffffff;
+  --color-bg-secondary: #f8f9fb;
+  --color-bg-tertiary: #f1f3f7;
+  --color-border: #e2e8f0;
+  --color-quote-border: #D12F2F;
+  --color-quote-bg: #FEF2F2;
+  --font-sans: 'IBM Plex Sans', -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Source Serif 4', 'Georgia', 'Times New Roman', serif;
+  --font-mono: 'IBM Plex Mono', 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+[data-theme='dark'] {
+  --color-primary: #F87171;
+  --color-primary-hover: #FCA5A5;
+  --color-primary-light: #450A0A;
+  --color-text: #e2e8f0;
+  --color-text-secondary: #94a3b8;
+  --color-text-tertiary: #64748b;
+  --color-bg: #0f1117;
+  --color-bg-secondary: #161b26;
+  --color-bg-tertiary: #1c2233;
+  --color-border: #1e2330;
+  --color-quote-border: #F87171;
+  --color-quote-bg: #1a0a0a;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+button {
+  cursor: pointer;
+  font-family: var(--font-sans);
+}
+
+.article-content {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  line-height: 1.8;
+  h2 {
+    font-family: var(--font-serif);
+    font-size: 24px;
+    font-weight: 600;
+    margin: 2em 0 0.8em;
+    padding-bottom: 0.3em;
+    border-bottom: 1px solid var(--color-border);
+  }
+  h3 {
+    font-family: var(--font-serif);
+    font-size: 20px;
+    font-weight: 600;
+    margin: 1.5em 0 0.6em;
+  }
+  p {
+    margin-bottom: 1.2em;
+  }
+  ul, ol {
+    margin: 1em 0;
+    padding-left: 2em;
+  }
+  li {
+    margin-bottom: 0.4em;
+  }
+  blockquote {
+    border-left: 3px solid var(--color-quote-border);
+    background: var(--color-quote-bg);
+    padding: 0.8em 1.2em;
+    margin: 1.5em 0;
+    font-style: italic;
+  }
+  code {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    background: var(--color-bg-tertiary);
+    padding: 0.15em 0.4em;
+    border-radius: 3px;
+  }
+  pre {
+    background: var(--color-bg-tertiary);
+    padding: 1em 1.2em;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin: 1.2em 0;
+    code {
+      background: none;
+      padding: 0;
+      font-size: 13.5px;
+      line-height: 1.65;
+    }
+  }
+  img {
+    max-width: 100%;
+    margin: 1em 0;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.2em 0;
+    th, td {
+      border: 1px solid var(--color-border);
+      padding: 0.5em 0.8em;
+      text-align: left;
+    }
+    th {
+      background: var(--color-bg-secondary);
+      font-weight: 600;
+    }
+  }
+}
