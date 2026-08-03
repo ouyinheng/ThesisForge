@@ -29,9 +29,9 @@ import JsonModal from '@/components/JsonModal.vue'
 import UrlEncodeModal from '@/components/UrlEncodeModal.vue'
 import RegexModal from '@/components/RegexModal.vue'
 import ImageToPdfModal from '@/components/ImageToPdfModal.vue'
-// 天气 & 名言组件
+// 天气 & 待办卡片组件
 import WeatherCard from '@/components/WeatherCard.vue'
-import QuoteCard from '@/components/QuoteCard.vue'
+import TodoCard from '@/components/TodoCard.vue'
 // 内容区容器
 import AppPage from '@/components/AppPage.vue'
 
@@ -291,7 +291,7 @@ const version = '1.0.0'
         </div>
       </section>
 
-      <QuoteCard />
+      <TodoCard />
     </div>
 
     <!-- Footer 状态条 -->
