@@ -32,6 +32,8 @@ import ImageToPdfModal from '@/components/ImageToPdfModal.vue'
 // 天气 & 名言组件
 import WeatherCard from '@/components/WeatherCard.vue'
 import QuoteCard from '@/components/QuoteCard.vue'
+// 内容区容器
+import AppPage from '@/components/AppPage.vue'
 
 const { t } = useI18n()
 const blogStore = useBlogStore()
@@ -148,7 +150,8 @@ const version = '1.0.0'
 </script>
 
 <template>
-  <div class="dashboard">
+  <AppPage>
+    <div class="dashboard">
     <!-- 顶部欢迎区 -->
     <section class="dashboard-hero">
       <div class="hero-left">
@@ -301,20 +304,20 @@ const version = '1.0.0'
     </footer>
   </div>
 
-  <!-- 工具箱弹窗 -->
-  <ToolModal v-model:show="showMdModal" />
-  <WordCountModal v-model:show="showWcModal" />
-  <JsonModal v-model:show="showJsonModal" />
-  <UrlEncodeModal v-model:show="showUrlModal" />
-  <RegexModal v-model:show="showRegexModal" />
-  <ImageToPdfModal v-model:show="showPdfModal" />
+    <!-- 工具箱弹窗 -->
+    <ToolModal v-model:show="showMdModal" />
+    <WordCountModal v-model:show="showWcModal" />
+    <JsonModal v-model:show="showJsonModal" />
+    <UrlEncodeModal v-model:show="showUrlModal" />
+    <RegexModal v-model:show="showRegexModal" />
+    <ImageToPdfModal v-model:show="showPdfModal" />
+  </AppPage>
 </template>
 
 <style lang="less" scoped>
 .dashboard {
   max-width: 1100px;
   margin: 0 auto;
-  padding-bottom: 1.5em;
 }
 
 // 顶部欢迎区

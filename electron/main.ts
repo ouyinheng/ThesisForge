@@ -1,11 +1,16 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import * as path from 'path'
 import * as fs from 'fs/promises'
-import { pathToFileURL } from 'url'
 
 const isDev = !app.isPackaged
 
 let mainWindow: BrowserWindow | null = null
+
+let currentStoragePath = app.getPath('userData')
+
+async function ensureDir(dirPath: string): Promise<void> {
+  await fs.mkdir(dirPath, { recursive: true })
+}
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
@@ -53,8 +58,17 @@ app.on('window-all-closed', () => {
 })
 
 function setupIpcHandlers(): void {
-  ipcMain.handle('file:readJSON', async (_: unknown, filename: string) => {
-    const filePath = path.join(app.getPath('userData'), filename)
+  ipcMain.handle('file:getStoragePath', async () => {
+    return currentStoragePath
+  })
+
+  ipcMain.handle('file:setStoragePath', async (_, newPath: string) => {
+    if (typeof newPath !== 'string' || !newPath.trim()) return
+    currentStoragePath = newPath.trim()
+  })
+
+  ipcMain.handle('file:readJSON', async (_, filename: string) => {
+    const filePath = path.join(currentStoragePath, filename)
     try {
       return await fs.readFile(filePath, 'utf-8')
     } catch {
@@ -62,15 +76,14 @@ function setupIpcHandlers(): void {
     }
   })
 
-  ipcMain.handle('file:writeJSON', async (_: unknown, filename: string, content: string) => {
-    const userDataPath = app.getPath('userData')
-    const filePath = path.join(userDataPath, filename)
-    await fs.mkdir(userDataPath, { recursive: true })
+  ipcMain.handle('file:writeJSON', async (_, filename: string, content: string) => {
+    const filePath = path.join(currentStoragePath, filename)
+    await ensureDir(path.dirname(filePath))
     await fs.writeFile(filePath, content, 'utf-8')
   })
 
-  ipcMain.handle('file:deleteFile', async (_: unknown, filename: string) => {
-    const filePath = path.join(app.getPath('userData'), filename)
+  ipcMain.handle('file:deleteFile', async (_, filename: string) => {
+    const filePath = path.join(currentStoragePath, filename)
     try {
       await fs.unlink(filePath)
     } catch {

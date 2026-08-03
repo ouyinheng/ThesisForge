@@ -21,11 +21,11 @@ export function useNavMenu() {
    * 导航菜单配置（侧边栏 + 顶栏共享同一数据源）
    */
   const navMenuOptions = computed<MenuOption[]>(() => [
-    // {
-    //   label: () => t("nav.home"),
-    //   key: "home",
-    //   icon: renderIcon(HomeOutline)
-    // },
+    {
+      label: () => t("nav.home"),
+      key: "home",
+      icon: renderIcon(HomeOutline)
+    },
     {
       label: () => t("nav.papers"),
       key: "papers",
@@ -51,13 +51,17 @@ export function useNavMenu() {
   ]);
 
   /**
-   * 当前激活的菜单 key
+   * 当前激活的菜单 key（支持动态路由高亮）
+   * - /article/:id → papers 高亮
+   * - /juejin/:id → juejin 高亮
+   * - /editor → home 高亮
    */
   const activeKey = computed(() => {
-    if (route.path === "/") return "home";
-    if (route.path === "/papers") return "papers";
-    if (route.path === "/juejin" || route.path.startsWith("/juejin/")) return "juejin";
-    if (route.path === "/about") return "about";
+    const path = route.path;
+    if (path === "/" || path.startsWith("/editor")) return "home";
+    if (path === "/papers" || path.startsWith("/article/")) return "papers";
+    if (path === "/juejin" || path.startsWith("/juejin/")) return "juejin";
+    if (path === "/about") return "about";
     return "";
   });
 

@@ -10,8 +10,8 @@ const isWindows = process.platform === 'win32'
 
 let mainWindow = null
 
-// 存储路径状态变量：初始为空，由前端读取 localStorage 后通过 IPC 同步
-let currentStoragePath = ''
+// 存储路径状态变量：默认使用 Electron userData 目录（可写），前端自定义路径会通过 setStoragePath 覆盖
+let currentStoragePath = app.getPath('userData')
 
 function createWindow() {
   const windowOptions = {

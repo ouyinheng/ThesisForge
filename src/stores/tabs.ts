@@ -82,6 +82,9 @@ const routeTitle = (route: RouteLocationNormalized, locale: string): string => {
   return route.path
 }
 
+/** 刷新 key map —— 每个 fullPath 一个计数器，变化时触发对应组件强制重建 */
+export const reloadKeyMap = ref<Record<string, number>>({})
+
 export const useTabsStore = defineStore('tabs', () => {
   const tabs = ref<TabItem[]>(loadTabs())
   const activeKey = ref<string>(tabs.value[0]?.fullPath || '/')
@@ -99,9 +102,21 @@ export const useTabsStore = defineStore('tabs', () => {
       // 更新 home tab title if needed
       const homeTab = tabs.value.find(t => t.pinned)
       if (homeTab) homeTab.title = routeTitle(route, locale)
-      activeKey.value = tabs.value[0].fullPath
+      activeKey.value = tabs.value[0]?.fullPath || '/'
       return
     }
+    // 查找是否存在相同 path 的非固定 tab，若有则复用（更新 fullPath/key，而非新建）
+    const existingByPath = tabs.value.find(t => !t.pinned && t.path === route.path)
+    if (existingByPath) {
+      existingByPath.fullPath = fullPath
+      existingByPath.key = fullPath
+      existingByPath.name = routeName
+      existingByPath.title = routeTitle(route, locale)
+      activeKey.value = fullPath
+      saveTabs(tabs.value)
+      return
+    }
+    // 精确匹配 fullPath（兜底，理论上与上面一致或不存在）
     const exists = tabs.value.find(t => t.fullPath === fullPath)
     if (!exists) {
       const title = routeTitle(route, locale)
@@ -168,6 +183,11 @@ export const useTabsStore = defineStore('tabs', () => {
     saveTabs(tabs.value)
   }
 
+  /** 刷新指定 tab：递增其 reloadKey 触发组件 key 变化 → 强制重建 */
+  function reloadTab(fullPath: string): void {
+    reloadKeyMap.value[fullPath] = (reloadKeyMap.value[fullPath] || 0) + 1
+  }
+
   function toggleShow(show?: boolean): void {
     showTabs.value = show ?? !showTabs.value
     localStorage.setItem(TAB_SHOW_KEY, String(showTabs.value))
@@ -187,6 +207,7 @@ export const useTabsStore = defineStore('tabs', () => {
     closeOthers,
     closeLeft,
     closeRight,
+    reloadTab,
     toggleShow,
   }
 })

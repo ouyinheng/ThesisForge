@@ -190,24 +190,34 @@ const ACCENT_PRESETS = [
           <NText depth="3" class="setting-label">{{ t('layout') }}</NText>
           <NButtonGroup size="small">
             <NButton
-              :type="settings.layout === 'sidebar' ? 'primary' : 'default'"
-              :ghost="settings.layout !== 'sidebar'"
-              @click="settings.layout = 'sidebar'"
+              :type="settings.layout === 'simple' ? 'primary' : 'default'"
+              :ghost="settings.layout !== 'simple'"
+              @click="settings.setLayoutMode('simple')"
             >
               <template #icon>
                 <NIcon><MenuIcon /></NIcon>
               </template>
-              Sidebar
+              简约
             </NButton>
             <NButton
-              :type="settings.layout === 'topbar' ? 'primary' : 'default'"
-              :ghost="settings.layout !== 'topbar'"
-              @click="settings.layout = 'topbar'"
+              :type="settings.layout === 'normal' ? 'primary' : 'default'"
+              :ghost="settings.layout !== 'normal'"
+              @click="settings.setLayoutMode('normal')"
             >
               <template #icon>
                 <NIcon><MenuIcon /></NIcon>
               </template>
-              Topbar
+              通用
+            </NButton>
+            <NButton
+              :type="settings.layout === 'full' ? 'primary' : 'default'"
+              :ghost="settings.layout !== 'full'"
+              @click="settings.setLayoutMode('full')"
+            >
+              <template #icon>
+                <NIcon><MenuIcon /></NIcon>
+              </template>
+              全面
             </NButton>
           </NButtonGroup>
         </div>
@@ -237,15 +247,6 @@ const ACCENT_PRESETS = [
         <div class="setting-row">
           <NText depth="3" class="setting-label">{{ t('accentColor') }}</NText>
           <n-space :size="6">
-            <button
-              class="accent-swatch"
-              :class="{ active: !settings.accentColor }"
-              :title="t('accentDefault')"
-              @click="settings.accentColor = ''"
-            >
-              <span class="swatch-default">D</span>
-              <NIcon v-if="!settings.accentColor" :size="12" class="swatch-check"><CheckmarkOutline /></NIcon>
-            </button>
             <button
               v-for="c in ACCENT_PRESETS"
               :key="c.value"
@@ -413,20 +414,9 @@ const ACCENT_PRESETS = [
 .accent-swatch.active {
   border-color: var(--color-text);
 }
-.swatch-default {
-  font-size: 11px;
-  font-weight: 700;
-  color: #D12F2F;
-  font-family: var(--font-serif);
-  line-height: 1;
-}
 .swatch-check {
   color: #ffffff;
   filter: drop-shadow(0 0 1px rgba(0,0,0,0.5));
-}
-.accent-swatch:first-child {
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
 }
 
 .setting-path-block {

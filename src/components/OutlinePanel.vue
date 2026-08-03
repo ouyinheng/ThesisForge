@@ -8,7 +8,10 @@ import { useI18n } from '@/composables/useI18n'
 const props = defineProps<{
   visible: boolean
   headings: Array<{ level: number; text: string; id: string }>
+  sidebarWidth?: number
 }>()
+
+const _sidebarW = computed(() => props.sidebarWidth ?? 64)
 
 const emit = defineEmits<{
   close: []
@@ -40,7 +43,7 @@ const indentMap: Record<number, string> = {
 </script>
 
 <template>
-  <div class="outline-panel" :class="{ visible }">
+  <div class="outline-panel" :class="{ visible }" :style="{ left: (_sidebarW + 12) + 'px' }">
     <div class="outline-header">
       <NButton quaternary size="small" :render-icon="renderIcon(ListOutline)" disabled>
         大纲
@@ -70,10 +73,9 @@ const indentMap: Record<number, string> = {
 <style lang="less" scoped>
 .outline-panel {
   position: fixed;
-  top: 48px;
-  left: 56px;
+  top: 60px;
   width: 200px;
-  height: calc(100vh - 48px);
+  height: calc(100vh - 60px);
   background: var(--color-bg-secondary);
   border-right: 1px solid var(--color-border);
   z-index: 49;

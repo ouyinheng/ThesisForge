@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { NLayoutSider, NScrollbar, NMenu, NDivider, NText, NTag } from "naive-ui";
+import { NMenu, NDivider, NText, NTag, NButton, NIcon } from "naive-ui";
+import { SettingsOutline, SunnyOutline, MoonOutline } from "@vicons/ionicons5";
 import { useI18n } from "@/composables/useI18n";
 import { useBlogStore } from "@/stores/blog";
+import { useSettingsStore } from "@/stores/settings";
 import { useRouter, useRoute } from "vue-router";
 import { useNavMenu } from "@/composables/useNavMenu";
 
@@ -10,15 +12,18 @@ const props = defineProps<{
   collapsed: boolean;
 }>();
 
-const emit = defineEmits<{
-  toggleCollapse: [boolean];
-}>();
-
 const { t } = useI18n();
 const blogStore = useBlogStore();
+const settings = useSettingsStore();
 const router = useRouter();
 const route = useRoute();
 const { navMenuOptions, activeKey, handleSelect } = useNavMenu();
+
+const isSimpleLayout = computed(() => settings.layout === 'simple');
+
+function openSettings(): void {
+  window.dispatchEvent(new CustomEvent('open-settings-global'));
+}
 
 const activeTag = computed<string | undefined>(() => {
   const tag = route.query.tag;
@@ -45,168 +50,72 @@ function filterByTag(tag: string): void {
 </script>
 
 <template>
-  <NLayoutSider
-    class="sidebar"
-    :class="{ 'sidebar-collapsed': props.collapsed }"
-    :collapsed="props.collapsed"
-    :collapsed-width="64"
-    :width="220"
-    bordered
-    show-trigger
-    collapse-mode="width"
-    :native-scrollbar="false"
-    @update:collapsed="emit('toggleCollapse', $event)"
-  >
-    <NScrollbar class="sidebar-content">
-      <div class="sidebar-inner">
-        <!-- Logo / Brand -->
-        <div class="sidebar-brand">
-          <span class="brand-mark">P</span>
-          <span v-if="!props.collapsed" class="brand-text">PaperBlog</span>
-        </div>
+  <div class="app-sidebar flex-col flex-1">
+    <!-- 菜单区：占满剩余高度，可滚动 -->
+    <NMenu
+      class="side-menu cus-scroll-y"
+      :options="navMenuOptions"
+      :value="activeKey"
+      :collapsed="props.collapsed"
+      :collapsed-width="64"
+      :collapsed-icon-size="20"
+      v-model:expanded-keys="expandedKeys"
+      :indent="18"
+      :root-indent="18"
+      @update:value="handleSelect"
+    />
 
-        <div class="sidebar-nav">
-          <NMenu
-            :options="navMenuOptions"
-            :value="activeKey"
-            :collapsed="props.collapsed"
-            :collapsed-width="56"
-            :collapsed-icon-size="20"
-            v-model:expanded-keys="expandedKeys"
-            :indent="18"
-            :root-indent="18"
-            @update:value="handleSelect"
-          />
-        </div>
-
-        <NDivider
-          v-if="blogStore.allTags.length && !props.collapsed"
-          :style="{ margin: '16px 0 8px' }"
-        />
-
-        <div
-          class="sidebar-tags"
-          v-if="blogStore.allTags.length && !props.collapsed"
+    <!-- 标签云区：仅展开时显示 -->
+    <NDivider
+      v-if="blogStore.allTags.length && !props.collapsed"
+      :style="{ margin: '8px 12px' }"
+    />
+    <div class="sidebar-tags" v-if="blogStore.allTags.length && !props.collapsed">
+      <NText depth="3" class="tags-title">Tags</NText>
+      <div class="tags-list">
+        <NTag
+          v-for="tag in blogStore.allTags"
+          :key="tag.name"
+          :type="activeTag === tag.name ? 'primary' : 'default'"
+          size="small"
+          :bordered="false"
+          checkable
+          :checked="activeTag === tag.name"
+          @update:checked="() => filterByTag(tag.name)"
         >
-          <NText depth="3" class="tags-title">Tags</NText>
-          <div class="tags-list">
-            <NTag
-              v-for="tag in blogStore.allTags"
-              :key="tag.name"
-              :type="activeTag === tag.name ? 'primary' : 'default'"
-              size="small"
-              :bordered="false"
-              :color="
-                activeTag === tag.name
-                  ? {
-                      color: 'var(--color-primary-light)',
-                      textColor: 'var(--color-primary)',
-                    }
-                  : undefined
-              "
-              checkable
-              :checked="activeTag === tag.name"
-              @update:checked="() => filterByTag(tag.name)"
-            >
-              {{ tag.name }}
-              <NText depth="3" class="tag-count">{{ tag.count }}</NText>
-            </NTag>
-          </div>
-        </div>
-
-        <footer class="sidebar-footer" v-if="!props.collapsed">
-          <NText depth="3">{{ t("sidebar.academic") }}</NText>
-        </footer>
+          {{ tag.name }}
+          <NText depth="3" class="tag-count">{{ tag.count }}</NText>
+        </NTag>
       </div>
-    </NScrollbar>
-  </NLayoutSider>
+    </div>
+
+    <!-- simple 布局底部：设置 + 主题切换（无顶栏时在此提供入口） -->
+    <div v-if="isSimpleLayout" class="sidebar-footer">
+      <NDivider :style="{ margin: '8px 12px' }" />
+      <div class="footer-actions">
+        <NButton quaternary circle size="small" @click="settings.toggleTheme">
+          <template #icon>
+            <NIcon :component="settings.theme === 'dark' ? SunnyOutline : MoonOutline" />
+          </template>
+        </NButton>
+        <NButton quaternary circle size="small" @click="openSettings">
+          <template #icon>
+            <NIcon :component="SettingsOutline" />
+          </template>
+        </NButton>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style lang="less" scoped>
-.sidebar {
-  position: fixed;
-  top: 48px;
-  left: 0;
-  bottom: 0;
-  width: 220px;
-  background: var(--color-bg);
+.app-sidebar {
   display: flex;
-  flex-direction: column;
-  z-index: 60;
-  transition: width var(--transition);
+  min-height: 0;
 }
-:deep(.n-layout-sider) {
-  width: 220px !important;
-  background: var(--color-bg) !important;
-  border-right: 1px solid var(--color-border) !important;
-}
-:deep(.n-layout-sider-scrim) {
-  background: rgba(0, 0, 0, 0.5);
-}
-:deep(.n-layout-sider-trigger-wrapper) {
-  z-index: 9999;
-}
-:deep(.n-layout-sider--collapsed) {
-  width: 64px !important;
-}
-
-.sidebar-collapsed .sidebar-inner {
-  padding: 1em 0.4em 1.5em;
-}
-.sidebar-content {
+.side-menu {
   flex: 1;
-  min-height: 0; /* important for scroll */
-
-  :deep(.n-scrollbar-container) {
-    height: 100%;
-  }
-}
-
-.sidebar-inner {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding: 1em 0.8em 1.5em;
-  width: 100%;
-  min-width: 0;
-}
-
-/* 收起态：NLayoutSider 通过 .sidebar-collapsed 类标识 */
-.sidebar-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 1.5em;
-  padding: 0 0.2em;
-}
-
-.brand-mark {
-  width: 28px;
-  height: 28px;
-  background: var(--color-primary);
-  color: #fff;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-serif);
-  font-weight: 700;
-  font-size: 14px;
-  flex-shrink: 0;
-}
-
-.brand-text {
-  font-family: var(--font-serif);
-  font-size: 16px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-/* Nav menu */
-.sidebar-nav {
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
+  min-height: 0;
   width: 100%;
 
   :deep(.n-menu) {
@@ -220,6 +129,10 @@ function filterByTag(tag: string): void {
 
   :deep(.n-menu-item-content) {
     border-radius: var(--radius-sm);
+    &::before {
+      left: 3px;
+      right: 3px;
+    }
   }
 
   :deep(.n-menu-item-content--child-active .n-menu-item-content__icon) {
@@ -229,9 +142,10 @@ function filterByTag(tag: string): void {
 
 /* Tags */
 .sidebar-tags {
-  flex: 1;
-  margin-top: 0.5em;
+  flex-shrink: 0;
+  padding: 0 12px 12px;
   overflow-y: auto;
+  max-height: 240px;
 }
 
 .tags-title {
@@ -253,12 +167,15 @@ function filterByTag(tag: string): void {
   font-size: 11px;
 }
 
+/* simple 布局底部操作按钮 */
 .sidebar-footer {
-  padding-top: 1em;
-  font-size: 12px;
-  border-top: 1px solid var(--color-border);
-  text-align: center;
   flex-shrink: 0;
   margin-top: auto;
+}
+.footer-actions {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 12px 12px;
 }
 </style>

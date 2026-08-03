@@ -1,38 +1,42 @@
 <script setup lang="ts">
-defineOptions({ name: "about" })
-import { NH1, NH2, NText, NDivider, NCard } from 'naive-ui'
-import { useI18n } from '@/composables/useI18n'
+defineOptions({ name: "about" });
+import { NH1, NH2, NText, NDivider, NCard } from "naive-ui";
+import { useI18n } from "@/composables/useI18n";
+import AppPage from "@/components/AppPage.vue";
 
-const { t } = useI18n()
+const { t } = useI18n();
 
-const featureList = [
-  { icon: '', text: '' }
-]
+const featureList = [{ icon: "", text: "" }];
 </script>
 
 <template>
-  <NCard class="about-page" :bordered="false">
-    <NH1 class="about-title">{{ t('about.title') }}</NH1>
-    <NText depth="2" class="about-description">{{ t('about.description') }}</NText>
+  <AppPage>
+    <NCard class="about-page" :bordered="false">
+      <NH1 class="about-title">{{ t("about.title") }}</NH1>
+      <NText depth="2" class="about-description">{{ t("about.description") }}</NText>
 
-    <NDivider />
+      <NDivider />
 
-    <NH2 class="features-title">{{ t('about.features') }}</NH2>
-    <ul class="features-list">
-      <li v-for="feature in t('about.featureList')" :key="feature">
-        <NText depth="2">{{ feature }}</NText>
-      </li>
-    </ul>
+      <NH2 class="features-title">{{ t("about.features") }}</NH2>
+      <ul class="features-list">
+        <li v-for="feature in t('about.featureList')" :key="feature">
+          <NText depth="2">{{ feature }}</NText>
+        </li>
+      </ul>
 
-    <NDivider />
+      <NDivider />
 
-    <NText depth="3" class="about-footer">{{ t('about.footer') }}</NText>
-  </NCard>
+      <NText depth="3" class="about-footer">{{ t("about.footer") }}</NText>
+    </NCard>
+  </AppPage>
 </template>
 
 <style lang="less" scoped>
 .about-page {
-  padding-bottom: 3em;
+  width: 100%;
+  max-width: 920px;
+  margin-left: var(--content-ml, auto);
+  margin-right: var(--content-mr, auto);
 }
 
 .about-title {
@@ -63,7 +67,7 @@ const featureList = [
     font-family: var(--font-serif);
     font-size: 16px;
     &:before {
-      content: '\2013';
+      content: "\2013";
       position: absolute;
       left: 0;
       color: var(--color-primary);

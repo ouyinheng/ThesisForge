@@ -25,7 +25,7 @@ export interface UpdateArticleDTO {
 }
 
 export type Theme = 'light' | 'dark'
-export type LayoutMode = 'sidebar' | 'topbar'
+export type LayoutMode = 'normal' | 'full' | 'simple' | 'empty'
 export type Locale = 'zh' | 'en'
 
 export interface TagInfo {

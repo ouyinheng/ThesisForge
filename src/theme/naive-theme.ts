@@ -13,11 +13,12 @@ export function useNaiveTheme() {
   const settings = useSettingsStore()
 
   const themeOverrides = computed<GlobalThemeOverrides>(() => {
-    // 显式依赖：访问 settings.theme 与 settings.locale，主题切换时重算
+    // 显式依赖：访问 settings.theme、settings.locale 与 settings.accentColor，确保变化时重算
     const theme = settings.theme
     const locale = settings.locale
+    const accent = settings.accentColor
 
-    const primary = getCssVar('--color-primary')
+    const primary = accent || getCssVar('--color-primary')
     const primaryHover = getCssVar('--color-primary-hover')
     const text = getCssVar('--color-text')
     const textSecondary = getCssVar('--color-text-secondary')

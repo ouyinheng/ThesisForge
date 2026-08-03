@@ -1,6 +1,6 @@
 <script setup lang="ts">
 defineOptions({ name: "juejin-article" });
-import { ref, computed, onMounted, watch, h, nextTick, createApp } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch, h, nextTick, createApp } from "vue";
 import { openInIframe } from "@/composables/useExternalLink";
 import {
   NButton,
@@ -21,8 +21,20 @@ import { useI18n } from "@/composables/useI18n";
 import { getJuejinArticle, type JuejinArticle } from "@/services/juejinCache";
 import { getJuejinArticleContent } from "@/services/juejinContent";
 import { useBlogStore } from "@/stores/blog";
+import { useLayout } from "@/composables/useLayout";
+import { useContentReflow } from "@/composables/useContentReflow";
 import OutlinePanel from "@/components/OutlinePanel.vue";
+import AppPage from "@/components/AppPage.vue";
 import type { Component } from "vue";
+
+const { sidebarCollapsed, sidebarWidth } = useLayout();
+const _sidebarRef = ref(sidebarWidth.value);
+watch(sidebarWidth, (w) => {
+  _sidebarRef.value = w;
+});
+
+// 自适应内容宽度与对齐（掘金页 max-width 820px）
+const contentReflow = useContentReflow(820);
 
 const { t } = useI18n();
 const route = useRoute();
@@ -306,125 +318,137 @@ async function saveAsLocalArticle(): Promise<void> {
   }
 }
 
-onMounted(load);
+onMounted(() => {
+  load();
+  nextTick(() => contentReflow.start());
+});
 // watch(articleId, load)
 </script>
 
 <template>
-  <div ref="articlePageRef" class="juejin-article">
-    <!-- 大纲浮动按钮 -->
-    <button
-      v-if="headings.length > 0"
-      class="outline-float-btn"
-      @click="showOutline = !showOutline"
-      :title="showOutline ? '隐藏大纲' : '打开大纲'"
+  <AppPage>
+    <div
+      ref="articlePageRef"
+      class="juejin-article"
+      :style="{
+        '--content-ml': 'auto',
+        '--content-mr': contentReflow.align.value === 'right' ? '0' : 'auto'
+      }"
     >
-      <NIcon :size="18"><ListOutline /></NIcon>
-    </button>
-
-    <!-- 大纲面板 -->
-    <OutlinePanel
-      :visible="showOutline"
-      :headings="headings"
-      @close="showOutline = false"
-      @navigate="handleHeadingNavigate"
-    />
-
-    <div class="article-actions">
-      <NButton tertiary size="small" :render-icon="renderIcon(ArrowBackOutline)" @click="goBack">
-        {{ t("nav.back") }}
-      </NButton>
-      <div class="action-group">
-        <NButton
-          tertiary
-          size="small"
-          :loading="saving"
-          :render-icon="renderIcon(BookmarkOutline)"
-          @click="saveAsLocalArticle"
-          class="save-btn"
-        >
-          保存
-        </NButton>
-      </div>
-    </div>
-
-    <!-- 加载中（只在完全没有缓存时显示整页 spin）-->
-    <div v-if="loading && !article" class="article-loading">
-      <NSpin size="large" />
-    </div>
-
-    <NEmpty v-else-if="notFound && !article" :description="'内容加载失败，请返回列表查看'">
-      <template #extra>
-        <NButton size="small" @click="goBack">{{ t("nav.back") }}</NButton>
-      </template>
-    </NEmpty>
-
-    <div v-else-if="article" class="article-card">
-      <header class="article-header">
-        <h1 class="article-title">{{ article.title }}</h1>
-        <div class="article-meta">
-          <NText depth="3" v-if="article.user_name">{{ article.user_name }}</NText>
-          <NText depth="3" v-if="article.user_name" class="meta-dot">·</NText>
-          <NText depth="3">
-            {{ formatCount(article.view_count) }} 阅读 · {{ formatCount(article.digg_count) }} 赞
-          </NText>
-        </div>
-        <div class="article-tags" v-if="article.tags.length">
-          <NTag
-            v-for="tag in article.tags"
-            :key="tag.tag_name"
-            size="small"
-            :bordered="false"
-            class="article-tag"
-          >
-            {{ tag.tag_name }}
-          </NTag>
-        </div>
-      </header>
-
-      <NDivider />
-
-      <!-- 正文加载中骨架（有缓存元数据但正文在抓取中）-->
-      <div v-if="loading && !article.web_html_content" class="content-loading">
-        <NSkeleton height="20px" width="80%" :sharp="false" />
-        <NSkeleton height="16px" width="90%" :sharp="false" />
-        <NSkeleton height="16px" width="60%" :sharp="false" />
-      </div>
-
-      <n-image-group
-        v-if="article.web_html_content"
-        v-model:show="previewVisible"
-        v-model:current="previewIdx"
-        :src-list="previewImgs"
-        :show-toolbar="true"
-        style="display: contents"
+      <!-- 大纲浮动按钮 -->
+      <button
+        v-if="sidebarCollapsed && headings.length > 0"
+        class="outline-float-btn"
+        @click="showOutline = !showOutline"
+        :style="{ left: _sidebarRef + 12 + 'px' }"
+        :title="showOutline ? '隐藏大纲' : '打开大纲'"
       >
-        <div class="article-content" v-html="article.web_html_content"></div>
-      </n-image-group>
-      <div v-else class="article-preview">
-        <p class="preview-brief">{{ article.brief_content || "（暂无正文预览）" }}</p>
-        <NButton type="primary" size="small" @click="openOriginalArticle(article.article_id)">
-          在掘金查看原文 ↗
+        <NIcon :size="18"><ListOutline /></NIcon>
+      </button>
+
+      <!-- 大纲面板 -->
+      <OutlinePanel
+        :visible="showOutline"
+        :headings="headings"
+        :sidebar-width="_sidebarRef"
+        @close="showOutline = false"
+        @navigate="handleHeadingNavigate"
+      />
+
+      <div class="article-actions">
+        <NButton tertiary size="small" :render-icon="renderIcon(ArrowBackOutline)" @click="goBack">
+          {{ t("nav.back") }}
         </NButton>
+        <div class="action-group">
+          <NButton
+            tertiary
+            size="small"
+            :loading="saving"
+            :render-icon="renderIcon(BookmarkOutline)"
+            @click="saveAsLocalArticle"
+            class="save-btn"
+          >
+            保存
+          </NButton>
+        </div>
       </div>
+
+      <!-- 加载中（只在完全没有缓存时显示整页 spin）-->
+      <div v-if="loading && !article" class="article-loading">
+        <NSpin size="large" />
+      </div>
+
+      <NEmpty v-else-if="notFound && !article" :description="'内容加载失败，请返回列表查看'">
+        <template #extra>
+          <NButton size="small" @click="goBack">{{ t("nav.back") }}</NButton>
+        </template>
+      </NEmpty>
+
+      <div v-else-if="article" class="article-card">
+        <header class="article-header">
+          <h1 class="article-title">{{ article.title }}</h1>
+          <div class="article-meta">
+            <NText depth="3" v-if="article.user_name">{{ article.user_name }}</NText>
+            <NText depth="3" v-if="article.user_name" class="meta-dot">·</NText>
+            <NText depth="3">
+              {{ formatCount(article.view_count) }} 阅读 · {{ formatCount(article.digg_count) }} 赞
+            </NText>
+          </div>
+          <div class="article-tags" v-if="article.tags.length">
+            <NTag
+              v-for="tag in article.tags"
+              :key="tag.tag_name"
+              size="small"
+              :bordered="false"
+              class="article-tag"
+            >
+              {{ tag.tag_name }}
+            </NTag>
+          </div>
+        </header>
+
+        <NDivider />
+
+        <!-- 正文加载中骨架（有缓存元数据但正文在抓取中）-->
+        <div v-if="loading && !article.web_html_content" class="content-loading">
+          <NSkeleton height="20px" width="80%" :sharp="false" />
+          <NSkeleton height="16px" width="90%" :sharp="false" />
+          <NSkeleton height="16px" width="60%" :sharp="false" />
+        </div>
+
+        <n-image-group
+          v-if="article.web_html_content"
+          v-model:show="previewVisible"
+          v-model:current="previewIdx"
+          :src-list="previewImgs"
+          :show-toolbar="true"
+          style="display: contents"
+        >
+          <div class="article-content" v-html="article.web_html_content"></div>
+        </n-image-group>
+        <div v-else class="article-preview">
+          <p class="preview-brief">{{ article.brief_content || "（暂无正文预览）" }}</p>
+          <NButton type="primary" size="small" @click="openOriginalArticle(article.article_id)">
+            在掘金查看原文 ↗
+          </NButton>
+        </div>
+      </div>
+
+      <!-- NImageGroup 会渲染预览，无需额外 DOM -->
     </div>
-
-    <!-- NImageGroup 会渲染预览，无需额外 DOM -->
-  </div>
-
-  <n-back-top :listen-to="articlePageRef" :right="32" :bottom="40" :visibility-height="300" />
+  </AppPage>
 </template>
 
 <style lang="less" scoped>
 .juejin-article {
-  max-width: 820px;
-  margin: 0 auto;
+  max-width: 920px;
+  margin-left: var(--content-ml, auto);
+  margin-right: var(--content-mr, auto);
 }
 
 .outline-float-btn {
   position: fixed;
-  top: 56px;
-  left: 68px;
+  top: 72px;
   width: 32px;
   height: 32px;
   border-radius: 50%;

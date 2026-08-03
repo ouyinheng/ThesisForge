@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, type Component } from "vue";
-import { NButton, NButtonGroup, NIcon, NTooltip, NMenu } from "naive-ui";
+import { computed, inject, type Component } from "vue";
+import { NButton, NButtonGroup, NIcon, NTooltip } from "naive-ui";
 import {
   SunnyOutline,
   MoonOutline,
@@ -15,18 +15,23 @@ import { useSettingsStore } from "@/stores/settings";
 import { useRouter, useRoute } from "vue-router";
 import { isDesktop } from "@/services/storage";
 import { h } from "vue";
-import { useNavMenu } from "@/composables/useNavMenu";
 
 const emit = defineEmits<{
   openSettings: [];
 }>();
 
+// 优先从注入拿到 openSettings（新布局系统），fallback 为 emit
+const openSettingsFn = inject<(() => void) | null>('openSettings', null)
+
 const { t } = useI18n();
-const { currentLayout, toggleLayout } = useLayout();
+const { currentLayout, setLayout } = useLayout();
 const settings = useSettingsStore();
 const router = useRouter();
 const route = useRoute();
-const { navMenuOptions, activeKey: activeNavKey, handleSelect: handleNavSelect } = useNavMenu();
+
+function handleOpenSettings() {
+  openSettingsFn ? openSettingsFn() : emit('openSettings')
+}
 
 const currentTheme = computed(() => settings.theme);
 const isElectron = isDesktop();
@@ -60,19 +65,9 @@ function winClose(): void {
 <template>
   <header class="app-header">
     <!-- 品牌 -->
-    <div class="header-brand" :class="{ 'brand-hidden': currentLayout === 'topbar' }">
+    <div class="header-brand">
       <!-- PaperBlog -->
     </div>
-
-    <!-- 顶栏模式下展示导航 -->
-    <NMenu
-      v-if="currentLayout === 'topbar'"
-      mode="horizontal"
-      :options="navMenuOptions"
-      :value="activeNavKey"
-      @update:value="handleNavSelect"
-      class="header-menu"
-    />
 
     <!-- 中间填充区 -->
     <div class="header-spacer"></div>
@@ -100,11 +95,11 @@ function winClose(): void {
           <template #trigger>
             <NButton
               tertiary
-              :render-icon="renderIcon(currentLayout === 'sidebar' ? ReaderOutline : ExpandOutline)"
-              @click="toggleLayout"
+              :render-icon="renderIcon(currentLayout === 'full' ? ReaderOutline : ExpandOutline)"
+              @click="setLayout(currentLayout === 'full' ? 'normal' : 'full')"
             />
           </template>
-          {{ currentLayout === "sidebar" ? "侧边栏布局" : "顶栏布局" }}
+          {{ currentLayout === "full" ? "通用布局" : "全面布局" }}
         </NTooltip>
         <NTooltip trigger="hover" placement="bottom">
           <template #trigger>
@@ -129,7 +124,7 @@ function winClose(): void {
             <NButton
               quaternary
               :render-icon="renderIcon(SettingsOutline)"
-              @click="emit('openSettings')"
+              @click="handleOpenSettings"
             />
           </template>
           {{ t("settings") }}
@@ -221,7 +216,7 @@ function winClose(): void {
   flex: 0 1 auto;
   min-width: 0;
   overflow: hidden;
-
+  padding-left: 200px;
   :deep(.n-menu) {
     background: transparent;
     height: 100%;

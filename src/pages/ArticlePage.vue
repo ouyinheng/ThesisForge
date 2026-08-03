@@ -1,6 +1,6 @@
 <script setup lang="ts">
 defineOptions({ name: "article" });
-import { ref, computed, onMounted, nextTick } from "vue";
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from "vue";
 import {
   NButton,
   NH1,
@@ -30,7 +30,9 @@ import { useI18n } from "@/composables/useI18n";
 import { useBlogStore } from "@/stores/blog";
 import { useSettingsStore } from "@/stores/settings";
 import { useLayout } from "@/composables/useLayout";
+import { useContentReflow } from "@/composables/useContentReflow";
 import OutlinePanel from "@/components/OutlinePanel.vue";
+import AppPage from "@/components/AppPage.vue";
 import { exportToMarkdown, exportToImage, exportToPDF, exportToHTML } from "@/services/exporter";
 import type { Article } from "@/types";
 
@@ -66,7 +68,15 @@ const previewVisible = ref(false);
 const previewImgs = ref<string[]>([]);
 const previewIdx = ref(0);
 
-const { currentLayout } = useLayout();
+const { sidebarWidth, sidebarCollapsed } = useLayout();
+const _sidebarRef = ref(sidebarWidth.value);
+watch(sidebarWidth, (w) => {
+  _sidebarRef.value = w;
+});
+
+// 自适应内容宽度与对齐
+const contentReflow = useContentReflow(1100);
+
 const articleId = computed(() => String(route.params.id));
 
 // 文档大纲
@@ -74,9 +84,6 @@ const headings = computed(() => {
   if (!article.value?.content) return [];
   return extractHeadings(article.value.content);
 });
-
-// 在侧边栏模式下的大纲面板可见性
-const sidebarCollapsed = computed(() => currentLayout.value === "sidebar");
 
 function handleHeadingNavigate(id: string): void {
   // 由于内容通过 v-html 渲染，需要找到对应的标题并滚动过去
@@ -215,113 +222,121 @@ onMounted(async () => {
   nextTick(() => {
     const el = document.querySelector(".article-body") as HTMLElement | null;
     setupContentInteractions(el);
+    contentReflow.start();
   });
 });
 </script>
 
 <template>
-  <div class="article-page" v-if="article && !loading">
-    <!-- 浮动大纲切换按钮（侧边栏模式显示）-->
-    <button
-      class="outline-float-btn"
-      v-if="sidebarCollapsed && headings.length > 0"
-      @click="showOutline = !showOutline"
-      :title="showOutline ? '隐藏大纲' : '打开大纲'"
+  <AppPage>
+    <div
+      class="article-page"
+      v-if="article && !loading"
+      :style="{
+        '--content-ml': 'auto',
+        '--content-mr': contentReflow.align.value === 'right' ? '0' : 'auto'
+      }"
     >
-      <NIcon :size="18"><ListOutline /></NIcon>
-    </button>
+      <!-- 浮动大纲切换按钮（侧边栏模式显示）-->
+      <button
+        class="outline-float-btn"
+        v-if="sidebarCollapsed && headings.length > 0"
+        @click="showOutline = !showOutline"
+        :style="{ left: _sidebarRef + 12 + 'px' }"
+        :title="showOutline ? '隐藏大纲' : '打开大纲'"
+      >
+        <NIcon :size="18"><ListOutline /></NIcon>
+      </button>
 
-    <!-- 大纲面板 -->
-    <OutlinePanel
-      :visible="showOutline && sidebarCollapsed"
-      :headings="headings"
-      @close="showOutline = false"
-      @navigate="handleHeadingNavigate"
-    />
+      <!-- 大纲面板 -->
+      <OutlinePanel
+        :visible="showOutline && sidebarCollapsed"
+        :headings="headings"
+        :sidebar-width="_sidebarRef"
+        @close="showOutline = false"
+        @navigate="handleHeadingNavigate"
+      />
 
-    <div class="article-actions">
-      <NButton tertiary size="small" :render-icon="renderIcon(ArrowBackOutline)" @click="goBack">
-        {{ t("nav.back") }}
-      </NButton>
-      <div class="action-group">
-        <NDropdown :options="exportOptions" trigger="click" @select="handleExportSelect">
+      <div class="article-actions">
+        <!-- <NButton tertiary size="small" :render-icon="renderIcon(ArrowBackOutline)" @click="goBack">
+          {{ t("nav.back") }}
+        </NButton> -->
+        <div></div>
+        <div class="action-group">
+          <NDropdown :options="exportOptions" trigger="click" @select="handleExportSelect">
+            <NButton
+              tertiary
+              size="small"
+              :loading="exporting"
+              :render-icon="renderIcon(DownloadOutline)"
+            >
+              {{ t("article.export") }}
+            </NButton>
+          </NDropdown>
+          <NButton tertiary size="small" :render-icon="renderIcon(PencilOutline)" @click="goEdit">
+            {{ t("article.edit") }}
+          </NButton>
           <NButton
             tertiary
             size="small"
-            :loading="exporting"
-            :render-icon="renderIcon(DownloadOutline)"
+            :render-icon="renderIcon(TrashOutline)"
+            @click="handleDelete"
+            class="delete-btn"
           >
-            {{ t("article.export") }}
+            {{ t("article.delete") }}
           </NButton>
-        </NDropdown>
-        <NButton tertiary size="small" :render-icon="renderIcon(PencilOutline)" @click="goEdit">
-          {{ t("article.edit") }}
-        </NButton>
-        <NButton
-          tertiary
-          size="small"
-          :render-icon="renderIcon(TrashOutline)"
-          @click="handleDelete"
-          class="delete-btn"
-        >
-          {{ t("article.delete") }}
-        </NButton>
-      </div>
-    </div>
-
-    <div class="export-target">
-      <header class="article-header">
-        <NH1 class="article-title">{{ article.title }}</NH1>
-        <div class="article-meta">
-          <NText depth="3">{{ formatDate(article.createdAt) }}</NText>
-          <NText depth="3" class="meta-dot">·</NText>
-          <NText depth="3"
-            >{{ blogStore.getReadTime(article.content) }} {{ t("article.readTime") }}</NText
-          >
         </div>
-        <NTag
-          v-for="tag in article.tags"
-          :key="tag"
-          size="small"
-          :bordered="false"
-          class="article-tag"
-        >
-          {{ tag }}
-        </NTag>
-      </header>
-
-      <div class="article-summary-block" v-if="article.summary">
-        <NText depth="2">{{ article.summary }}</NText>
       </div>
 
-      <NDivider />
+      <div class="export-target">
+        <header class="article-header">
+          <NH1 class="article-title">{{ article.title }}</NH1>
+          <div class="article-meta">
+            <NText depth="3">{{ formatDate(article.createdAt) }}</NText>
+            <NText depth="3" class="meta-dot">·</NText>
+            <NText depth="3"
+              >{{ blogStore.getReadTime(article.content) }} {{ t("article.readTime") }}</NText
+            >
+          </div>
+          <NTag
+            v-for="tag in article.tags"
+            :key="tag"
+            size="small"
+            :bordered="false"
+            class="article-tag"
+          >
+            {{ tag }}
+          </NTag>
+        </header>
 
-      <n-image-group
-        v-if="article.content"
-        v-model:show="previewVisible"
-        v-model:current="previewIdx"
-        :src-list="previewImgs"
-        :show-toolbar="true"
-        style="display: contents"
-      >
-        <div class="article-body article-content" v-html="article.content"></div>
-      </n-image-group>
+        <div class="article-summary-block" v-if="article.summary">
+          <NText depth="2">{{ article.summary }}</NText>
+        </div>
+
+        <NDivider />
+
+        <n-image-group
+          v-if="article.content"
+          v-model:show="previewVisible"
+          v-model:current="previewIdx"
+          :src-list="previewImgs"
+          :show-toolbar="true"
+          style="display: contents"
+        >
+          <div class="article-body article-content" v-html="article.content"></div>
+        </n-image-group>
+      </div>
     </div>
-  </div>
-
-  <div class="article-loading" v-else-if="loading">
-    <NSpin size="large" />
-  </div>
-
-  <!-- 回到顶部 -->
-  <n-back-top :right="32" :bottom="40" :visibility-height="300" />
+    <div class="article-loading" v-else-if="loading">
+      <NSpin size="large" />
+    </div>
+  </AppPage>
 </template>
 
 <style lang="less" scoped>
 .outline-float-btn {
   position: fixed;
-  top: 56px;
-  left: 68px;
+  top: 72px;
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -349,9 +364,9 @@ onMounted(async () => {
 .article-page {
   width: 100%;
   max-width: 1100px;
-}
-.app-main.sidebar-collapsed ~ .article-page .outline-float-btn {
-  left: 68px;
+  // 默认居中对称，当 --content-align: right 时贴右
+  margin-left: var(--content-ml, auto);
+  margin-right: var(--content-mr, auto);
 }
 
 .article-actions {

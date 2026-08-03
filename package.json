@@ -13,6 +13,7 @@
     "type:check": "vue-tsc --noEmit"
   },
   "dependencies": {
+    "@iconify-json/line-md": "^1.2.16",
     "@tiptap/extension-code-block-lowlight": "^2.6.0",
     "@tiptap/extension-color": "^2.6.0",
     "@tiptap/extension-highlight": "^2.6.0",
@@ -64,18 +65,20 @@
   "build": {
     "appId": "com.paperblog.app",
     "productName": "PaperBlog",
+    "icon": "electron/PaperBlog.icns",
     "directories": {
       "output": "release"
     },
     "files": [
-      "dist/**/*"
-    ],
-    "extraResources": [
+      "dist/**/*",
       "electron/**/*"
     ],
     "mac": {
       "category": "public.app-category.productivity",
-      "target": "dmg"
+      "target": [
+        "dir",
+        "zip"
+      ]
     },
     "win": {
       "target": "nsis"

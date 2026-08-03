@@ -26,7 +26,7 @@ function setStoredCity(city: string): void {
 }
 
 function getStoredAccent(): string {
-  return localStorage.getItem(ACCENT_COLOR_KEY) || ''
+  return localStorage.getItem(ACCENT_COLOR_KEY) || '#D12F2F'
 }
 function setStoredAccent(color: string): void {
   if (color) localStorage.setItem(ACCENT_COLOR_KEY, color)
@@ -43,7 +43,7 @@ function adjustColor(hex: string, amount: number): string {
 
 export const useSettingsStore = defineStore('settings', () => {
   const theme: Ref<Theme> = ref<Theme>('light')
-  const layout: Ref<LayoutMode> = ref<LayoutMode>('sidebar')
+  const layout: Ref<LayoutMode> = ref<LayoutMode>('normal')
   const locale: Ref<Locale> = ref<Locale>('zh')
   const loaded: Ref<boolean> = ref<boolean>(false)
   const storagePath: Ref<string> = ref<string>('')
@@ -120,7 +120,8 @@ export const useSettingsStore = defineStore('settings', () => {
   }
 
   function toggleLayout(): void {
-    layout.value = layout.value === 'sidebar' ? 'topbar' : 'sidebar'
+    // normal <-> full 切换
+    layout.value = layout.value === 'normal' ? 'full' : 'normal'
   }
 
   function setLayoutMode(mode: LayoutMode): void {

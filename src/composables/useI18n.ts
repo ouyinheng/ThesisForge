@@ -19,6 +19,14 @@ const messages = {
       recommend: '推荐',
       latest: '最新',
     },
+    tabs: {
+      reload: '重新加载',
+      close: '关闭',
+      closeOthers: '关闭其他',
+      closeLeft: '关闭左侧',
+      closeRight: '关闭右侧',
+      cannotCloseHome: '首页标签不能关闭',
+    },
     home: {
       title: '全部',
       sortByDate: '按日期排序',
@@ -261,6 +269,14 @@ const messages = {
     juejin: {
       recommend: 'Recommended',
       latest: 'Latest',
+    },
+    tabs: {
+      reload: 'Reload',
+      close: 'Close',
+      closeOthers: 'Close Others',
+      closeLeft: 'Close Left',
+      closeRight: 'Close Right',
+      cannotCloseHome: 'Home tab cannot be closed',
     },
     home: {
       title: 'All Papers',

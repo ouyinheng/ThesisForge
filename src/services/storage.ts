@@ -405,8 +405,12 @@ export async function setTheme(theme: Theme): Promise<void> {
 }
 
 export async function getLayout(): Promise<LayoutMode> {
-  const layout = (await backend.getPref(PREF_KEYS.LAYOUT)) as LayoutMode | null
-  return layout || 'sidebar'
+  const layout = (await backend.getPref(PREF_KEYS.LAYOUT)) as LayoutMode | string | null
+  // 兼容旧值（sidebar/topbar → normal）
+  if (layout === 'sidebar' || layout === 'topbar') return 'normal'
+  const validLayouts: LayoutMode[] = ['normal', 'full', 'simple', 'empty']
+  if (layout && validLayouts.includes(layout as LayoutMode)) return layout as LayoutMode
+  return 'normal'
 }
 
 export async function setLayout(layout: LayoutMode): Promise<void> {

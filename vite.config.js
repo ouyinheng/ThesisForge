@@ -5,6 +5,7 @@ import { resolve } from 'path'
 import { cpSync, mkdirSync } from 'fs'
 
 export default defineConfig({
+  base: './',
   plugins: [
     vue(),
     UnoCSS(),

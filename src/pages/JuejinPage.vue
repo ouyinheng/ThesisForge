@@ -27,6 +27,7 @@ import { useI18n } from "@/composables/useI18n";
 import { putJuejinArticle, type JuejinArticle } from "@/services/juejinCache";
 import { useJuejinStore } from "@/stores/juejin";
 import JuejinCard from "@/components/JuejinCard.vue";
+import AppPage from "@/components/AppPage.vue";
 
 const { t } = useI18n();
 const router = useRouter();
@@ -334,7 +335,8 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="juejinPageRef" class="juejin-page">
+  <AppPage>
+    <div ref="juejinPageRef" class="juejin-page">
     <NCard :bordered="false" class="page-card">
       <!-- 顶部品牌 -->
       <div class="juejin-header">
@@ -523,8 +525,7 @@ onBeforeUnmount(() => {
       <div ref="sentinelEl" class="sentinel" v-if="showSentinel"></div>
     </NCard>
   </div>
-
-  <n-back-top :listen-to="juejinPageRef" :right="32" :bottom="40" :visibility-height="300" />
+  </AppPage>
 </template>
 
 <style lang="less" scoped>
@@ -532,8 +533,7 @@ onBeforeUnmount(() => {
   width: 100%;
   max-width: 1100px;
   min-width: 600px;
-  height: 100%;
-  overflow-y: auto;
+  margin: 0 auto;
 }
 
 .page-card {

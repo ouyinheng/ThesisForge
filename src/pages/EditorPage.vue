@@ -1,53 +1,46 @@
 <script setup lang="ts">
-defineOptions({ name: "editor" })
-import { ref, computed, onMounted, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useI18n } from '@/composables/useI18n'
-import { useBlogStore } from '@/stores/blog'
-import { useSettingsStore } from '@/stores/settings'
-import TiptapEditor from '@/components/TiptapEditor.vue'
-import {
-  NInput,
-  NDynamicTags,
-  NButton,
-  NText,
-  NDivider,
-  NH3,
-  useMessage,
-} from 'naive-ui'
-import { ArrowBackOutline, PaperPlaneOutline } from '@vicons/ionicons5'
-import { h, type Component } from 'vue'
-import { NIcon } from 'naive-ui'
-import { isDesktop } from '@/services/storage'
+defineOptions({ name: "editor" });
+import { ref, computed, onMounted, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useI18n } from "@/composables/useI18n";
+import { useBlogStore } from "@/stores/blog";
+import { useSettingsStore } from "@/stores/settings";
+import TiptapEditor from "@/components/TiptapEditor.vue";
+import { NInput, NDynamicTags, NButton, NText, NDivider, NH3, useMessage } from "naive-ui";
+import { ArrowBackOutline, PaperPlaneOutline } from "@vicons/ionicons5";
+import { h, type Component } from "vue";
+import { NIcon } from "naive-ui";
+import { isDesktop } from "@/services/storage";
+import AppPage from "@/components/AppPage.vue";
 
-const { t } = useI18n()
-const route = useRoute()
-const router = useRouter()
-const blogStore = useBlogStore()
-const settings = useSettingsStore()
-const message = useMessage()
+const { t } = useI18n();
+const route = useRoute();
+const router = useRouter();
+const blogStore = useBlogStore();
+const settings = useSettingsStore();
+const message = useMessage();
 
-const isDesktopApp = isDesktop()
-const storagePathSet = computed(() => !isDesktopApp || !!settings.storagePath?.trim())
+const isDesktopApp = isDesktop();
+const storagePathSet = computed(() => !isDesktopApp || !!settings.storagePath?.trim());
 
-const isEditing = computed(() => !!route.params.id)
-const pageTitle = computed(() => isEditing.value ? t('editor.editTitle') : t('editor.newTitle'))
+const isEditing = computed(() => !!route.params.id);
+const pageTitle = computed(() => (isEditing.value ? t("editor.editTitle") : t("editor.newTitle")));
 
 // 编辑器实例的唯一 key：编辑模式用文章 id，新建模式用带时间戳的唯一值确保每次新建都重建编辑器
-const editorKey = ref(route.params.id as string || `new-${Date.now()}`)
+const editorKey = ref((route.params.id as string) || `new-${Date.now()}`);
 
-const title = ref('')
-const summary = ref('')
-const content = ref('')
-const tags = ref<string[]>([])
+const title = ref("");
+const summary = ref("");
+const content = ref("");
+const tags = ref<string[]>([]);
 
 // 重置表单到新建状态
 function resetForm() {
-  title.value = ''
-  summary.value = ''
-  content.value = ''
-  tags.value = []
-  editorKey.value = `new-${Date.now()}`
+  title.value = "";
+  summary.value = "";
+  content.value = "";
+  tags.value = [];
+  editorKey.value = `new-${Date.now()}`;
 }
 
 // 监听路由变化：编辑→新建 或 新建→编辑 时确保表单状态正确
@@ -55,42 +48,51 @@ watch(
   () => route.path,
   () => {
     if (!isEditing.value) {
-      resetForm()
+      resetForm();
     }
   }
-)
+);
 
-const suggestedTags = ['Machine Learning', 'Systems', 'Theory', 'NLP', 'Databases', 'Security', 'Networks', 'AI']
+const suggestedTags = [
+  "Machine Learning",
+  "Systems",
+  "Theory",
+  "NLP",
+  "Databases",
+  "Security",
+  "Networks",
+  "AI"
+];
 
 onMounted(async () => {
   if (isEditing.value) {
-    const article = await blogStore.getArticleById(String(route.params.id))
+    const article = await blogStore.getArticleById(String(route.params.id));
     if (article) {
-      title.value = article.title
-      summary.value = article.summary
-      content.value = article.content
-      tags.value = [...article.tags]
+      title.value = article.title;
+      summary.value = article.summary;
+      content.value = article.content;
+      tags.value = [...article.tags];
     } else {
-      router.push('/')
+      router.push("/");
     }
   }
-})
+});
 
 async function handlePublish() {
   if (!title.value.trim()) {
-    message.error(t('editor.emptyTitle'))
-    return
+    message.error(t("editor.emptyTitle"));
+    return;
   }
-  if (!content.value.trim() || content.value === '<p></p>') {
-    message.error(t('editor.emptyContent'))
-    return
+  if (!content.value.trim() || content.value === "<p></p>") {
+    message.error(t("editor.emptyContent"));
+    return;
   }
 
   // 桌面模式下必须先设置存储路径
   if (isDesktopApp && !settings.storagePath?.trim()) {
-    message.warning(t('pathRequired'))
-    openSettings()
-    return
+    message.warning(t("pathRequired"));
+    openSettings();
+    return;
   }
 
   if (isEditing.value) {
@@ -98,53 +100,72 @@ async function handlePublish() {
       title: title.value.trim(),
       summary: summary.value.trim(),
       content: content.value,
-      tags: tags.value,
-    })
+      tags: tags.value
+    });
   } else {
     await blogStore.createArticle({
       title: title.value.trim(),
       summary: summary.value.trim(),
       content: content.value,
-      tags: tags.value,
-    })
+      tags: tags.value
+    });
   }
 
-  message.success(t('editor.publishSuccess'))
-  router.push('/')
+  message.success(t("editor.publishSuccess"));
+  router.push("/");
 }
 
 function renderIcon(icon: Component) {
-  return () => h(NIcon, null, { default: () => h(icon) })
+  return () => h(NIcon, null, { default: () => h(icon) });
 }
 
 function addSuggestedTag(tag: string): void {
   if (!tags.value.includes(tag)) {
-    tags.value.push(tag)
+    tags.value.push(tag);
   }
 }
 
 function openSettings(): void {
-  window.dispatchEvent(new CustomEvent('open-settings-global'))
+  window.dispatchEvent(new CustomEvent("open-settings-global"));
 }
 </script>
 
 <template>
-  <div class="editor-page">
+  <AppPage
+    ref="articlePageRef"
+    class="editor-page"
+    :style="{
+      '--content-ml': 'auto',
+      '--content-mr': 'auto'
+    }"
+  >
     <!-- 未设置存储路径时的提示横幅 -->
     <div class="path-warning-banner" v-if="isDesktopApp && !storagePathSet">
-      <NText depth="2">{{ t('pathRequired') }}</NText>
+      <NText depth="2">{{ t("pathRequired") }}</NText>
       <NButton size="tiny" type="primary" @click="openSettings">
-        {{ t('settings') }}
+        {{ t("settings") }}
       </NButton>
     </div>
 
     <div class="editor-toolbar">
-      <NButton tertiary size="small" :render-icon="renderIcon(ArrowBackOutline)" @click="router.back()">
-        {{ t('nav.back') }}
-      </NButton>
-      <NH3 class="toolbar-title" :style="{ margin: 0 }">{{ pageTitle }}</NH3>
-      <NButton type="primary" size="small" :render-icon="renderIcon(PaperPlaneOutline)" @click="handlePublish">
-        {{ t('nav.publish') }}
+      <!-- <NButton
+        tertiary
+        size="small"
+        :render-icon="renderIcon(ArrowBackOutline)"
+        @click="router.back()"
+      >
+        {{ t("nav.back") }}
+      </NButton> -->
+      <div></div>
+      <div></div>
+      <!-- <NH3 class="toolbar-title" :style="{ margin: 0 }">{{ pageTitle }}</NH3> -->
+      <NButton
+        type="primary"
+        size="small"
+        :render-icon="renderIcon(PaperPlaneOutline)"
+        @click="handlePublish"
+      >
+        {{ t("nav.publish") }}
       </NButton>
     </div>
 
@@ -166,15 +187,22 @@ function openSettings(): void {
 
       <NDivider />
 
-      <TiptapEditor :key="editorKey" v-model="content" :placeholder="'Start writing your paper...'" />
+      <TiptapEditor
+        :key="editorKey"
+        v-model="content"
+        :placeholder="'Start writing your paper...'"
+      />
 
       <div class="tag-section">
         <NText depth="2" class="tag-label">Tags</NText>
         <NDynamicTags v-model:value="tags" size="small" />
-        <div class="tag-suggestions" v-if="suggestedTags.filter(tag => !tags.includes(tag)).length">
-          <NText depth="3" class="suggestions-label">{{ t('editor.tagSuggestions') }}:</NText>
+        <div
+          class="tag-suggestions"
+          v-if="suggestedTags.filter((tag) => !tags.includes(tag)).length"
+        >
+          <NText depth="3" class="suggestions-label">{{ t("editor.tagSuggestions") }}:</NText>
           <NButton
-            v-for="tag in suggestedTags.filter(t => !tags.includes(t))"
+            v-for="tag in suggestedTags.filter((t) => !tags.includes(t))"
             :key="tag"
             size="tiny"
             dashed
@@ -186,10 +214,16 @@ function openSettings(): void {
         </div>
       </div>
     </div>
-  </div>
+  </AppPage>
 </template>
 
 <style lang="less" scoped>
+.editor-page {
+  width: 100%;
+  max-width: 920px;
+  margin-left: var(--content-ml, auto);
+  margin-right: var(--content-mr, auto);
+}
 .path-warning-banner {
   display: flex;
   align-items: center;
@@ -204,7 +238,7 @@ function openSettings(): void {
   color: #d46b08;
 }
 
-[data-theme='dark'] .path-warning-banner {
+[data-theme="dark"] .path-warning-banner {
   background: #2c1d0d;
   border-color: #613409;
   color: #d89614;

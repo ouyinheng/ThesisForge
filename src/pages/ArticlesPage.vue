@@ -9,6 +9,7 @@ import { useI18n } from "@/composables/useI18n";
 import { useBlogStore } from "@/stores/blog";
 import { useSettingsStore } from "@/stores/settings";
 import { useRouter, useRoute } from "vue-router";
+import AppPage from "@/components/AppPage.vue";
 
 const { t } = useI18n();
 const blogStore = useBlogStore();
@@ -55,59 +56,63 @@ function renderIcon(icon: Component) {
 </script>
 
 <template>
-  <div class="articles-page">
-    <div class="page-header">
-      <NH1 class="page-title">{{ t("home.title") }}</NH1>
-      <div class="header-actions">
-        <NTag v-if="activeTag" type="primary" size="small" round closable @close="clearFilter">
-          #{{ activeTag }}
-        </NTag>
-        <NButton
-          size="small"
-          tertiary
-          :render-icon="renderIcon(SwapVerticalOutline)"
-          @click="sortBy = sortBy === 'date' ? 'title' : 'date'"
-        >
-          {{ sortBy === "date" ? t("home.sortByDate") : t("home.sortByTitle") }}
-        </NButton>
-      </div>
-    </div>
-
-    <div class="articles-list" v-if="displayedMetas.length">
-      <article
-        class="article-card"
-        v-for="meta in displayedMetas"
-        :key="meta.id"
-        @click="goToArticle(meta.id)"
-      >
-        <div class="card-main">
-          <NH2 class="card-title">{{ meta.title }}</NH2>
-          <NText depth="3" class="card-date">{{ formatDate(meta.createdAt) }}</NText>
-          <NText depth="2" class="card-summary">{{ meta.summary }}</NText>
-          <div class="card-tags" v-if="meta.tags.length">
-            <NTag
-              v-for="tag in meta.tags"
-              :key="tag"
-              size="small"
-              :bordered="false"
-              class="card-tag"
-            >
-              {{ tag }}
-            </NTag>
-          </div>
+  <AppPage>
+    <div class="articles-page">
+      <div class="page-header">
+        <NH1 class="page-title">{{ t("home.title") }}</NH1>
+        <div class="header-actions">
+          <NTag v-if="activeTag" type="primary" size="small" round closable @close="clearFilter">
+            <div style="color: #666">#{{ activeTag }}</div>
+          </NTag>
+          <NButton
+            size="small"
+            tertiary
+            :render-icon="renderIcon(SwapVerticalOutline)"
+            @click="sortBy = sortBy === 'date' ? 'title' : 'date'"
+          >
+            {{ sortBy === "date" ? t("home.sortByDate") : t("home.sortByTitle") }}
+          </NButton>
         </div>
-        <NText depth="3" class="card-arrow">{{ t("nav.read") }}</NText>
-      </article>
-    </div>
+      </div>
 
-    <NEmpty v-else :description="t('home.empty')" :style="{ marginTop: '80px' }" />
-  </div>
+      <div class="articles-list" v-if="displayedMetas.length">
+        <article
+          class="article-card"
+          v-for="meta in displayedMetas"
+          :key="meta.id"
+          @click="goToArticle(meta.id)"
+        >
+          <div class="card-main">
+            <NH2 class="card-title">{{ meta.title }}</NH2>
+            <NText depth="3" class="card-date">{{ formatDate(meta.createdAt) }}</NText>
+            <NText depth="2" class="card-summary">{{ meta.summary }}</NText>
+            <div class="card-tags" v-if="meta.tags.length">
+              <NTag
+                v-for="tag in meta.tags"
+                :key="tag"
+                size="small"
+                :bordered="false"
+                class="card-tag"
+              >
+                {{ tag }}
+              </NTag>
+            </div>
+          </div>
+          <NText depth="3" class="card-arrow">{{ t("nav.read") }}</NText>
+        </article>
+      </div>
+
+      <NEmpty v-else :description="t('home.empty')" :style="{ marginTop: '80px' }" />
+    </div>
+  </AppPage>
 </template>
 
 <style lang="less" scoped>
 .articles-page {
   width: 100%;
-  max-width: 1100px;
+  max-width: 920px;
+  margin-left: var(--content-ml, auto);
+  margin-right: var(--content-mr, auto);
 }
 .page-header {
   display: flex;
