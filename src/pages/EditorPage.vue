@@ -2,16 +2,16 @@
 defineOptions({ name: "editor" });
 import { ref, computed, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { useI18n } from "@/composables/useI18n";
+import { useI18n } from "@/composables/i18n/useI18n";
 import { useBlogStore } from "@/stores/blog";
 import { useSettingsStore } from "@/stores/settings";
-import TiptapEditor from "@/components/TiptapEditor.vue";
+import TiptapEditor from "@/components/editor/TiptapEditor.vue";
 import { NInput, NDynamicTags, NButton, NText, NDivider, NH3, useMessage } from "naive-ui";
 import { ArrowBackOutline, PaperPlaneOutline } from "@vicons/ionicons5";
 import { h, type Component } from "vue";
 import { NIcon } from "naive-ui";
 import { isDesktop } from "@/services/storage";
-import AppPage from "@/components/AppPage.vue";
+import AppPage from "@/components/app/AppPage.vue";
 
 const { t } = useI18n();
 const route = useRoute();

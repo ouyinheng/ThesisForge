@@ -8,8 +8,8 @@ import {
 import { NIcon, NButton } from 'naive-ui'
 import { h } from 'vue'
 import { useSettingsStore } from '@/stores/settings'
-import { useI18n } from '@/composables/useI18n'
-import { useSharedLayout } from '@/composables/useSharedLayout'
+import { useI18n } from '@/composables/i18n/useI18n'
+import { useSharedLayout } from '@/composables/layout/useSharedLayout'
 
 const { t } = useI18n()
 const settings = useSettingsStore()

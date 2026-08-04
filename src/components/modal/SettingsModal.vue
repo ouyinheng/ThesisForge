@@ -19,7 +19,7 @@ import {
 import { OpenOutline, CheckmarkOutline } from '@vicons/ionicons5'
 import { useSettingsStore } from '@/stores/settings'
 import { useTabsStore } from '@/stores/tabs'
-import { useI18n } from '@/composables/useI18n'
+import { useI18n } from '@/composables/i18n/useI18n'
 import { useMessage } from 'naive-ui'
 import { h, type Component } from 'vue'
 import { isDesktop, selectDirectory } from '@/services/storage'

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useSharedLayout } from '@/composables/useSharedLayout'
+import { useSharedLayout } from '@/composables/layout/useSharedLayout'
 import SideBar from './sidebar/index.vue'
 import AppHeader from './header/index.vue'
 

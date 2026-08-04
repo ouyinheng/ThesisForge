@@ -2,7 +2,7 @@
 import { NIcon, NButton } from 'naive-ui'
 import { CloseOutline, RefreshOutline, OpenOutline } from '@vicons/ionicons5'
 import { ref } from 'vue'
-import { useExternalLink } from '@/composables/useExternalLink'
+import { useExternalLink } from '@/composables/link/useExternalLink'
 
 const { visible, url, title, close } = useExternalLink()
 const iframeKey = ref(0)

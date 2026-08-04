@@ -5,11 +5,11 @@ import { NButton, NH1, NH2, NText, NTag, NEmpty } from "naive-ui";
 import { SwapVerticalOutline } from "@vicons/ionicons5";
 import { h, type Component } from "vue";
 import { NIcon } from "naive-ui";
-import { useI18n } from "@/composables/useI18n";
+import { useI18n } from "@/composables/i18n/useI18n";
 import { useBlogStore } from "@/stores/blog";
 import { useSettingsStore } from "@/stores/settings";
 import { useRouter, useRoute } from "vue-router";
-import AppPage from "@/components/AppPage.vue";
+import AppPage from "@/components/app/AppPage.vue";
 
 const { t } = useI18n();
 const blogStore = useBlogStore();

@@ -1,6 +1,6 @@
 import { h, type Component, computed } from "vue";
 import { NIcon, type MenuOption } from "naive-ui";
-import { useI18n } from "@/composables/useI18n";
+import { useI18n } from "@/composables/i18n/useI18n";
 import { useRoute, useRouter, type RouteLocationRaw } from "vue-router";
 import {
   HomeOutline,

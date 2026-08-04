@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { JuejinArticle } from '@/services/juejinCache'
+import type { JuejinArticle } from '@/services/juejin/juejinCache'
 
 interface FeedCache {
   list: JuejinArticle[]

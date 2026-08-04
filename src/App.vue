@@ -5,10 +5,10 @@ import { useRoute, useRouter } from 'vue-router'
 import { useTabsStore, reloadKeyMap } from '@/stores/tabs'
 import { useSettingsStore } from '@/stores/settings'
 import { useNaiveTheme } from '@/theme/naive-theme'
-import { openInIframe } from '@/composables/useExternalLink'
-import SettingsModal from '@/components/SettingsModal.vue'
-import IframeModal from '@/components/IframeModal.vue'
-import { useSharedLayout } from '@/composables/useSharedLayout'
+import { openInIframe } from '@/composables/link/useExternalLink'
+import SettingsModal from '@/components/modal/SettingsModal.vue'
+import IframeModal from '@/components/widget/IframeModal.vue'
+import { useSharedLayout } from '@/composables/layout/useSharedLayout'
 
 const route = useRoute()
 const router = useRouter()

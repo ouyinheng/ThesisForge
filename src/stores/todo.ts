@@ -43,12 +43,40 @@ export const useTodoStore = defineStore('todo', () => {
       .sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime())
   )
 
-  /** 今日到期 / 今日创建的待办 */
-  const todayTodos = computed(() => {
+  /** 今日待办 (含无日期) */
+  const todayTodos = computed(() =>
+    todos.value.filter((t) => !t.done && (!t.dueDate || t.dueDate === new Date().toISOString().slice(0, 10)))
+  )
+
+  /** 逾期待办 */
+  const overdueTodos = computed(() => {
     const today = new Date().toISOString().slice(0, 10)
-    return todos.value.filter(
-      (t) => !t.done && (t.dueDate === today || (!t.dueDate && t.createdAt.slice(0, 10) === today))
-    )
+    return todos.value.filter((t) => !t.done && t.dueDate && t.dueDate < today)
+  })
+
+  /** 明日待办 */
+  const tomorrowTodos = computed(() => {
+    const d = new Date()
+    d.setDate(d.getDate() + 1)
+    return todos.value.filter((t) => !t.done && t.dueDate === d.toISOString().slice(0, 10))
+  })
+
+  /** 本周待办 (2~7 天后) */
+  const upcomingTodos = computed(() => {
+    const d1 = new Date()
+    d1.setDate(d1.getDate() + 2)
+    const d2 = new Date()
+    d2.setDate(d2.getDate() + 7)
+    const a = d1.toISOString().slice(0, 10)
+    const b = d2.toISOString().slice(0, 10)
+    return todos.value.filter((t) => !t.done && t.dueDate && t.dueDate >= a && t.dueDate <= b)
+  })
+
+  /** 更远期 (7天+) */
+  const laterTodos = computed(() => {
+    const d = new Date()
+    d.setDate(d.getDate() + 7)
+    return todos.value.filter((t) => !t.done && t.dueDate && t.dueDate > d.toISOString().slice(0, 10))
   })
 
   /** 日历视图：按日期分组 */
@@ -56,8 +84,7 @@ export const useTodoStore = defineStore('todo', () => {
     const map: Record<string, Todo[]> = {}
     for (const t of todos.value) {
       const key = t.dueDate || t.createdAt.slice(0, 10)
-      if (!map[key]) map[key] = []
-      map[key].push(t)
+      ;(map[key] ||= []).push(t)
     }
     return map
   })
@@ -123,6 +150,10 @@ export const useTodoStore = defineStore('todo', () => {
     pendingTodos,
     doneTodos,
     todayTodos,
+    overdueTodos,
+    tomorrowTodos,
+    upcomingTodos,
+    laterTodos,
     todosByDate,
     addTodo,
     updateTodo,

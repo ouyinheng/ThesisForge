@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { NModal, NInput, NStatistic, NSpace, NGrid, NGi, NDivider, NButton, NEmpty, useMessage } from 'naive-ui'
-import { useI18n } from '@/composables/useI18n'
+import { useI18n } from '@/composables/i18n/useI18n'
 import { TrashOutline, CopyOutline } from '@vicons/ionicons5'
 
 const { t } = useI18n()

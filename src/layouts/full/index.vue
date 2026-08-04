@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { useSharedLayout } from '@/composables/useSharedLayout'
+import { useSharedLayout } from '@/composables/layout/useSharedLayout'
 import SideBar from './sidebar/index.vue'
 import AppHeader from './header/index.vue'
-import AppTabs from '@/components/AppTabs.vue'
+import AppTabs from '@/components/app/AppTabs.vue'
 import { useTabsStore } from '@/stores/tabs'
 
 const { sidebarCollapsed } = useSharedLayout()

@@ -9,11 +9,11 @@ import {
   NDropdown,
   useMessage,
 } from 'naive-ui'
-import { AddOutline, SearchOutline, TrashOutline, EllipsisVerticalOutline } from '@vicons/ionicons5'
-import AppPage from '@/components/AppPage.vue'
-import BookmarkFormModal from '@/components/BookmarkFormModal.vue'
+import { AddOutline, SearchOutline, TrashOutline, EllipsisVerticalOutline, BookmarkOutline, FolderOpenOutline, StarOutline } from '@vicons/ionicons5'
+import AppPage from '@/components/app/AppPage.vue'
+import BookmarkFormModal from '@/components/modal/BookmarkFormModal.vue'
 import { useCollectionStore } from '@/stores/collection'
-import { useI18n } from '@/composables/useI18n'
+import { useI18n } from '@/composables/i18n/useI18n'
 
 const { t } = useI18n()
 const store = useCollectionStore()
@@ -61,8 +61,8 @@ interface GroupTab {
 
 const groupTabs = computed<GroupTab[]>(() => {
   const tabs: GroupTab[] = [
-    { key: store.ALL, label: t('collection.all'), count: store.bookmarks.length },
-    { key: store.UNGROUPED, label: t('collection.ungrouped'), count: store.collectionCount(store.UNGROUPED) },
+    { key: store.ALL, label: t('collection.all'), count: store.bookmarks.length, icon: '📚' },
+    { key: store.UNGROUPED, label: t('collection.ungrouped'), count: store.collectionCount(store.UNGROUPED), icon: '📄' },
   ]
   tabs.push(
     ...store.sortedCollections.map((c) => ({
@@ -70,6 +70,7 @@ const groupTabs = computed<GroupTab[]>(() => {
       label: `${c.icon} ${c.name}`,
       count: store.collectionCount(c.id),
       icon: c.icon,
+      color: c.color,
     }))
   )
   return tabs
@@ -121,6 +122,17 @@ function groupColor(id: string): string {
   const c = store.collections.find((c) => c.id === id)
   return c?.color || 'var(--color-accent)'
 }
+
+/** 所有书签数量 */
+const totalCount = computed(() => store.bookmarks.length)
+
+/** 当前分组名称 */
+const currentGroupName = computed(() => {
+  if (activeGroup.value === store.ALL) return t('collection.all')
+  if (activeGroup.value === store.UNGROUPED) return t('collection.ungrouped')
+  const c = store.collections.find(c => c.id === activeGroup.value)
+  return c ? c.name : ''
+})
 </script>
 
 <template>
@@ -129,23 +141,33 @@ function groupColor(id: string): string {
       <!-- 顶部栏 -->
       <div class="collect-header">
         <div class="header-left">
-          <NH2 class="page-title">{{ t('collection.title') }}</NH2>
-          <span class="bookmark-count">{{ store.bookmarks.length }}</span>
+          <div class="title-group">
+            <div class="title-icon-wrap">
+              <NIcon :size="18"><BookmarkOutline /></NIcon>
+            </div>
+            <NH2 class="page-title">{{ t('collection.title') }}</NH2>
+          </div>
+          <span class="bookmark-count">
+            <NIcon :size="12"><FolderOpenOutline /></NIcon>
+            {{ totalCount }} 个书签
+          </span>
         </div>
         <div class="header-right">
-          <NInput
-            v-model:value="search"
-            :placeholder="t('collection.search')"
-            clearable
-            size="small"
-            style="width: 200px; margin-right: 8px"
-            @input="resetPage"
-          >
-            <template #prefix>
-              <NIcon :size="14"><SearchOutline /></NIcon>
-            </template>
-          </NInput>
-          <NButton type="primary" size="small" @click="openAdd">
+          <div class="search-wrapper">
+            <NInput
+              v-model:value="search"
+              :placeholder="t('collection.search')"
+              clearable
+              size="small"
+              class="search-input"
+              @input="resetPage"
+            >
+              <template #prefix>
+                <NIcon :size="14" class="search-icon"><SearchOutline /></NIcon>
+              </template>
+            </NInput>
+          </div>
+          <NButton type="primary" size="small" @click="openAdd" class="btn-add">
             <template #icon>
               <NIcon :size="14"><AddOutline /></NIcon>
             </template>
@@ -155,25 +177,29 @@ function groupColor(id: string): string {
       </div>
 
       <!-- 分组 tabs -->
-      <div class="group-tabs">
-        <button
-          v-for="tab in groupTabs"
-          :key="tab.key"
-          class="group-tab"
-          :class="{ active: activeGroup === tab.key }"
-          @click="activeGroup = tab.key; resetPage()"
-        >
-          <span>{{ tab.label }}</span>
-          <span class="tab-count">{{ tab.count }}</span>
-        </button>
+      <div class="group-tabs-wrapper">
+        <div class="group-tabs">
+          <button
+            v-for="tab in groupTabs"
+            :key="tab.key"
+            class="group-tab"
+            :class="{ active: activeGroup === tab.key }"
+            :style="activeGroup === tab.key && tab.color ? { '--tab-accent': tab.color } : undefined"
+            @click="activeGroup = tab.key; resetPage()"
+          >
+            <span class="tab-label">{{ tab.label }}</span>
+            <span class="tab-count" :class="{ 'active-count': activeGroup === tab.key }">{{ tab.count }}</span>
+          </button>
+        </div>
       </div>
 
       <!-- 书签网格 -->
-      <div class="bookmarks-grid" v-if="pagedBookmarks.length">
+      <TransitionGroup name="bookmark-card" tag="div" class="bookmarks-grid" v-if="pagedBookmarks.length">
         <div
           v-for="bm in pagedBookmarks"
           :key="bm.id"
           class="bm-card"
+          :style="{ '--card-accent': groupColor(bm.groupId) }"
         >
           <!-- 操作按钮 -->
           <div class="bm-actions">
@@ -204,15 +230,18 @@ function groupColor(id: string): string {
             rel="noopener"
             @click="goToUrl(bm.url, $event)"
           >
-            <div class="bm-icon" :style="{ '--bg': groupColor(bm.groupId) }">
-              <img
-                v-if="bm.icon"
-                :src="bm.icon"
-                class="bm-favicon"
-                alt=""
-                @error="(e: Event) => (e.target as HTMLImageElement).style.display = 'none'"
-              />
-              <span v-if="!bm.icon" class="bm-letter">{{ bm.letter }}</span>
+            <div class="bm-icon">
+              <div class="bm-icon-inner">
+                <img
+                  v-if="bm.icon"
+                  :src="bm.icon"
+                  class="bm-favicon"
+                  alt=""
+                  @error="(e: Event) => (e.target as HTMLImageElement).style.display = 'none'"
+                />
+                <span v-if="!bm.icon" class="bm-letter">{{ bm.letter }}</span>
+              </div>
+              <div class="bm-icon-ring"></div>
             </div>
           </a>
 
@@ -226,26 +255,42 @@ function groupColor(id: string): string {
             @click="goToUrl(bm.url, $event)"
           >
             <div class="bm-title">{{ bm.title }}</div>
-            <div class="bm-url">{{ shortUrl(bm.url) }}</div>
+            <div class="bm-url">
+              <NIcon :size="10"><StarOutline /></NIcon>
+              {{ shortUrl(bm.url) }}
+            </div>
           </a>
 
           <!-- 删除按钮（卡片右下角） -->
           <button
             class="bm-del"
             :title="t('collection.delete')"
-            @click="confirmDelete(bm.id)"
+            @click.stop="confirmDelete(bm.id)"
           >
             <NIcon :size="11"><TrashOutline /></NIcon>
           </button>
         </div>
-      </div>
+      </TransitionGroup>
 
       <!-- 空状态 -->
-      <NEmpty
-        v-else
-        class="empty-state"
-        :description="search ? t('collection.noResults') : t('collection.empty')"
-      />
+      <div v-else class="empty-wrapper">
+        <div class="empty-state">
+          <div class="empty-icon">
+            <NIcon :size="48"><FolderOpenOutline /></NIcon>
+          </div>
+          <p class="empty-text">{{ search ? t('collection.noResults') : t('collection.empty') }}</p>
+          <NButton
+            v-if="!search"
+            type="primary"
+            size="small"
+            class="empty-btn"
+            @click="openAdd"
+          >
+            <template #icon><NIcon :size="14"><AddOutline /></NIcon></template>
+            添加第一个书签
+          </NButton>
+        </div>
+      </div>
 
       <!-- 分页 -->
       <div class="pagination" v-if="totalPages > 1">
@@ -254,6 +299,7 @@ function groupColor(id: string): string {
           tertiary
           :disabled="currentPage <= 1"
           @click="currentPage--"
+          class="page-btn"
         >
           ‹
         </NButton>
@@ -263,6 +309,7 @@ function groupColor(id: string): string {
           tertiary
           :disabled="currentPage >= totalPages"
           @click="currentPage++"
+          class="page-btn"
         >
           ›
         </NButton>
@@ -274,136 +321,246 @@ function groupColor(id: string): string {
   </AppPage>
 </template>
 
-<style scoped>
+<style lang="less" scoped>
 .collection-page {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
-/* ── 顶部栏 ────────────────────────────────────────── */
+// ── 顶部栏 ──────────────────────────────────────────
 .collect-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 8px;
+  padding-bottom: 12px;
   border-bottom: 1px solid var(--color-border);
 }
+
 .header-left {
   display: flex;
-  align-items: baseline;
+  align-items: center;
+  gap: 12px;
+}
+
+.title-group {
+  display: flex;
+  align-items: center;
   gap: 8px;
 }
+
+.title-icon-wrap {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--color-primary-light) 0%, #FECACA 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+}
+
 .page-title {
   margin: 0;
   font-size: var(--fs-xl);
   font-weight: 600;
+  font-family: var(--font-serif);
+  letter-spacing: -0.01em;
 }
+
 .bookmark-count {
   font-size: var(--fs-sm);
   color: var(--color-text-tertiary);
   background: var(--color-bg-tertiary);
-  padding: 2px 8px;
+  padding: 4px 10px;
   border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
 }
+
 .header-right {
   display: flex;
   align-items: center;
+  gap: 8px;
 }
 
-/* ── 分组 tabs ──────────────────────────────────────── */
+.search-wrapper {
+  position: relative;
+}
+
+.search-input {
+  width: 200px;
+  transition: width 0.25s ease;
+
+  &:focus-within {
+    width: 260px;
+  }
+}
+
+.search-icon {
+  color: var(--color-text-tertiary);
+}
+
+.btn-add {
+  :deep(.n-button__content) {
+    gap: 4px;
+  }
+}
+
+// ── 分组 tabs ────────────────────────────────────────
+.group-tabs-wrapper {
+  overflow: hidden;
+}
+
 .group-tabs {
   display: flex;
   gap: 4px;
   overflow-x: auto;
-  padding-bottom: 2px;
+  padding: 4px 2px 8px;
   scrollbar-width: none;
 }
 .group-tabs::-webkit-scrollbar {
   display: none;
 }
+
 .group-tab {
+  --tab-accent: var(--color-primary);
+
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 12px;
+  gap: 6px;
+  padding: 6px 14px;
   font-size: var(--fs-sm);
   border-radius: 999px;
-  border: 1px solid transparent;
-  background: transparent;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
   color: var(--color-text-secondary);
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.2s;
+  transition: all 0.25s ease;
+  font-weight: 500;
+
+  &:hover {
+    background: var(--color-bg-hover);
+    color: var(--color-text-primary);
+    border-color: var(--tab-accent);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+
+  &.active {
+    background: var(--tab-accent);
+    color: #fff;
+    border-color: var(--tab-accent);
+    box-shadow: 0 3px 12px color-mix(in srgb, var(--tab-accent) 30%, transparent);
+    transform: translateY(-1px);
+
+    .tab-label {
+      color: #fff;
+    }
+  }
 }
-.group-tab:hover {
-  background: var(--color-bg-hover);
-  color: var(--color-text-primary);
+
+.tab-label {
+  transition: color 0.2s;
 }
-.group-tab.active {
-  background: var(--color-accent-light);
-  color: var(--color-accent);
-  border-color: var(--color-accent-light);
-}
+
 .tab-count {
   font-size: 10px;
-  min-width: 16px;
-  height: 16px;
+  min-width: 18px;
+  height: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 4px;
-  border-radius: 8px;
+  padding: 0 5px;
+  border-radius: 9px;
   background: var(--color-bg-tertiary);
   color: var(--color-text-tertiary);
+  font-weight: 600;
+  transition: all 0.2s;
 }
-.group-tab.active .tab-count {
-  background: var(--color-accent);
+
+.tab-count.active-count {
+  background: rgba(255, 255, 255, 0.25);
   color: #fff;
 }
 
-/* ── 书签网格 ───────────────────────────────────────── */
+// ── 书签网格 ─────────────────────────────────────────
 .bookmarks-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  position: relative;
 }
 
-/* ── 书签卡片 ───────────────────────────────────────── */
+// ── 书签卡片 ─────────────────────────────────────────
 .bm-card {
+  --card-accent: var(--color-primary);
+
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 14px 8px 10px;
-  border-radius: 12px;
-  background: var(--color-bg-card, var(--color-bg-secondary));
+  padding: 18px 10px 12px;
+  border-radius: 14px;
+  background: var(--color-bg-card, var(--color-bg));
   border: 1px solid var(--color-border);
   cursor: pointer;
-  transition: transform 0.15s, box-shadow 0.2s, border-color 0.2s;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
-}
-.bm-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  border-color: var(--color-accent-light);
+  animation: cardFadeIn 0.4s ease;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--card-accent);
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    border-color: transparent;
+
+    &::before {
+      opacity: 1;
+    }
+
+    .bm-icon-ring {
+      transform: scale(1.05);
+      opacity: 1;
+    }
+
+    .bm-icon-inner {
+      transform: scale(1.08);
+    }
+  }
 }
 
-/* hover 显示右上角操作 */
+// hover 显示右上角操作
 .bm-actions {
   position: absolute;
-  top: 6px;
-  right: 6px;
+  top: 8px;
+  right: 8px;
   opacity: 0;
-  transition: opacity 0.2s;
-  z-index: 1;
+  transform: translateY(-4px);
+  transition: all 0.25s ease;
+  z-index: 2;
 }
 .bm-card:hover .bm-actions {
   opacity: 1;
+  transform: translateY(0);
 }
 .bm-action-btn {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -412,40 +569,46 @@ function groupColor(id: string): string {
   border-radius: 50%;
   cursor: pointer;
   color: var(--color-text-secondary);
+  transition: all 0.2s;
+  backdrop-filter: blur(8px);
 }
 .bm-action-btn:hover {
-  background: var(--color-accent-light);
-  color: var(--color-accent);
+  background: var(--card-accent);
+  color: #fff;
+  transform: scale(1.1);
 }
 
-/* 删除按钮 */
+// 删除按钮
 .bm-del {
   position: absolute;
-  bottom: 6px;
-  right: 6px;
-  width: 20px;
-  height: 20px;
+  bottom: 8px;
+  right: 8px;
+  width: 22px;
+  height: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
   background: transparent;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   color: var(--color-text-tertiary);
   opacity: 0;
-  transition: opacity 0.2s, color 0.2s;
-  z-index: 1;
+  transform: scale(0.8);
+  transition: all 0.25s ease;
+  z-index: 2;
 }
 .bm-card:hover .bm-del {
   opacity: 1;
+  transform: scale(1);
 }
 .bm-del:hover {
-  color: #d12f2f;
-  background: rgba(209, 47, 47, 0.08);
+  color: #fff;
+  background: #ef4444;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
 }
 
-/* 链接区域 */
+// 链接区域
 .bm-link {
   display: flex;
   flex-direction: column;
@@ -453,42 +616,57 @@ function groupColor(id: string): string {
   text-decoration: none;
   color: inherit;
   width: 100%;
+  gap: 2px;
 }
 
-/* 图标 */
+// 图标
 .bm-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  background: var(--bg, var(--color-accent-light));
+  position: relative;
+  margin-bottom: 10px;
+}
+
+.bm-icon-inner {
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--card-accent) 0%, color-mix(in srgb, var(--card-accent) 60%, white) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   flex-shrink: 0;
-  margin-bottom: 8px;
-  transition: transform 0.2s;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--card-accent) 25%, transparent);
 }
-.bm-card:hover .bm-icon {
-  transform: scale(1.08);
+
+.bm-icon-ring {
+  position: absolute;
+  inset: -3px;
+  border-radius: 17px;
+  border: 2px solid var(--card-accent);
+  opacity: 0.3;
+  transition: all 0.25s ease;
+  pointer-events: none;
 }
+
 .bm-favicon {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 12px;
+  border-radius: 14px;
 }
 .bm-letter {
   font-size: 20px;
   font-weight: 700;
-  color: var(--color-accent);
+  color: #fff;
   line-height: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-/* 标题 */
+// 标题
 .bm-title {
   font-size: var(--fs-sm);
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-text-primary);
   text-align: center;
   width: 100%;
@@ -505,15 +683,52 @@ function groupColor(id: string): string {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  margin-top: 2px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 3px;
+  margin-top: 1px;
 }
 
-/* ── 空状态 ─────────────────────────────────────────── */
+// ── 空状态 ───────────────────────────────────────────
+.empty-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
 .empty-state {
-  padding: 80px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  animation: fadeIn 0.5s ease;
 }
 
-/* ── 分页 ───────────────────────────────────────────── */
+.empty-icon {
+  color: var(--color-text-tertiary);
+  opacity: 0.4;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--color-bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-text {
+  font-size: var(--fs-base);
+  color: var(--color-text-tertiary);
+  margin: 0;
+}
+
+.empty-btn {
+  margin-top: 4px;
+}
+
+// ── 分页 ─────────────────────────────────────────────
 .pagination {
   display: flex;
   align-items: center;
@@ -521,10 +736,84 @@ function groupColor(id: string): string {
   gap: 12px;
   padding: 16px 0 8px;
 }
+
+.page-btn {
+  min-width: 32px;
+  height: 32px;
+  transition: all 0.2s;
+
+  &:hover:not(:disabled) {
+    transform: scale(1.1);
+  }
+}
+
 .page-indicator {
   font-size: var(--fs-sm);
   color: var(--color-text-secondary);
   min-width: 48px;
   text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+// ── 动画 ───────────────────────────────────────────
+.bookmark-card-enter-active {
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.bookmark-card-leave-active {
+  transition: all 0.2s ease;
+  position: absolute;
+}
+.bookmark-card-enter-from {
+  opacity: 0;
+  transform: translateY(12px) scale(0.95);
+}
+.bookmark-card-leave-to {
+  opacity: 0;
+  transform: scale(0.9);
+}
+.bookmark-card-move {
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes cardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+// ── 响应式 ───────────────────────────────────────────
+@media (max-width: 640px) {
+  .collect-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .header-right {
+    width: 100%;
+  }
+
+  .search-input {
+    width: 100%;
+
+    &:focus-within {
+      width: 100%;
+    }
+  }
+
+  .bookmarks-grid {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 8px;
+  }
 }
 </style>

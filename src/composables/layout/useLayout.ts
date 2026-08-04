@@ -1,6 +1,6 @@
 import { computed } from 'vue'
 import { useSettingsStore } from '@/stores/settings'
-import { useSharedLayout } from '@/composables/useSharedLayout'
+import { useSharedLayout } from '@/composables/layout/useSharedLayout'
 
 /**
  * useLayout — 布局相关状态（对齐 vue-naive-admin 的布局体系）

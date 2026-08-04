@@ -10,8 +10,8 @@ import {
 } from 'naive-ui'
 import { RefreshOutline } from '@vicons/ionicons5'
 import { useCollectionStore } from '@/stores/collection'
-import { useI18n } from '@/composables/useI18n'
-import { fetchBookmarkInfo } from '@/composables/useBookmarkFetch'
+import { useI18n } from '@/composables/i18n/useI18n'
+import { fetchBookmarkInfo } from '@/composables/bookmark/useBookmarkFetch'
 
 const props = defineProps<{
   show: boolean

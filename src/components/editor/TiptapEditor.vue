@@ -2,7 +2,7 @@
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import { watch, onMounted, nextTick } from 'vue'
 import { NIcon, NTooltip } from 'naive-ui'
-import { useI18n } from '../composables/useI18n'
+import { useI18n } from '@/composables/i18n/useI18n'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import Link from '@tiptap/extension-link'

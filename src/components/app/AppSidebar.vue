@@ -2,11 +2,11 @@
 import { computed, ref, watch } from "vue";
 import { NMenu, NDivider, NText, NTag, NButton, NIcon } from "naive-ui";
 import { SettingsOutline, SunnyOutline, MoonOutline } from "@vicons/ionicons5";
-import { useI18n } from "@/composables/useI18n";
+import { useI18n } from "@/composables/i18n/useI18n";
 import { useBlogStore } from "@/stores/blog";
 import { useSettingsStore } from "@/stores/settings";
 import { useRouter, useRoute } from "vue-router";
-import { useNavMenu } from "@/composables/useNavMenu";
+import { useNavMenu } from "@/composables/nav/useNavMenu";
 
 const props = defineProps<{
   collapsed: boolean;

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { NText, NButton, NIcon, NSpin } from 'naive-ui'
-import { useI18n } from '@/composables/useI18n'
+import { useI18n } from '@/composables/i18n/useI18n'
 import { RefreshOutline, BookOutline } from '@vicons/ionicons5'
 import { fetchQuote, getRandomQuote } from '@/services/quote'
 

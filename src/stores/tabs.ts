@@ -59,6 +59,8 @@ const TITLE_MAP: Record<string, string> = {
   'editor-edit': '编辑文章',
   'juejin': '掘金',
   'juejin-article': '掘金文章',
+  'todos': '待办',
+  'collections': '收藏夹',
   'about': '关于',
 }
 
@@ -70,6 +72,8 @@ const TITLE_MAP_EN: Record<string, string> = {
   'editor-edit': 'Edit',
   'juejin': 'Juejin',
   'juejin-article': 'Juejin Article',
+  'todos': 'Todos',
+  'collections': 'Collections',
   'about': 'About',
 }
 

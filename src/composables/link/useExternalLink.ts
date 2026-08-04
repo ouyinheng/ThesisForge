@@ -1,6 +1,6 @@
 // 全局外部链接管理：所有外部链接统一在 iframe 内打开，不改变当前路由。
 // 用法：
-//   import { openInIframe } from '@/composables/useExternalLink'
+// import { openInIframe } from '@/composables/link/useExternalLink'
 //   openInIframe('https://juejin.cn/post/xxx')
 
 import { readonly, ref } from 'vue'

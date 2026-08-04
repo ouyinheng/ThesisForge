@@ -2,7 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import { NModal, NCard, NTabs, NTabPane, NInput, NButton, NSpace, NDivider, NTooltip, useMessage } from 'naive-ui'
 import { renderMiniMarkdown } from '@/utils/mini-markdown'
-import { useI18n } from '@/composables/useI18n'
+import { useI18n } from '@/composables/i18n/useI18n'
 import { CopyOutline, DownloadOutline, RefreshOutline } from '@vicons/ionicons5'
 
 const { t } = useI18n()

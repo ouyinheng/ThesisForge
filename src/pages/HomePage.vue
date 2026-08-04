@@ -18,22 +18,22 @@ import {
   BarChartOutline,
   TrendingUpOutline,
 } from '@vicons/ionicons5'
-import { useI18n } from '@/composables/useI18n'
+import { useI18n } from '@/composables/i18n/useI18n'
 import { useBlogStore } from '@/stores/blog'
 import { useRouter } from 'vue-router'
 import { type Component } from 'vue'
 // 工具箱弹窗
-import ToolModal from '@/components/ToolModal.vue'
-import WordCountModal from '@/components/WordCountModal.vue'
-import JsonModal from '@/components/JsonModal.vue'
-import UrlEncodeModal from '@/components/UrlEncodeModal.vue'
-import RegexModal from '@/components/RegexModal.vue'
-import ImageToPdfModal from '@/components/ImageToPdfModal.vue'
+import ToolModal from '@/components/modal/ToolModal.vue'
+import WordCountModal from '@/components/modal/WordCountModal.vue'
+import JsonModal from '@/components/modal/JsonModal.vue'
+import UrlEncodeModal from '@/components/modal/UrlEncodeModal.vue'
+import RegexModal from '@/components/modal/RegexModal.vue'
+import ImageToPdfModal from '@/components/modal/ImageToPdfModal.vue'
 // 天气 & 待办卡片组件
-import WeatherCard from '@/components/WeatherCard.vue'
-import TodoCard from '@/components/TodoCard.vue'
+import WeatherCard from '@/components/widget/WeatherCard.vue'
+import TodoCard from '@/components/widget/TodoCard.vue'
 // 内容区容器
-import AppPage from '@/components/AppPage.vue'
+import AppPage from '@/components/app/AppPage.vue'
 
 const { t } = useI18n()
 const blogStore = useBlogStore()

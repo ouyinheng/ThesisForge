@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { NTag, NText } from 'naive-ui'
-import type { JuejinArticle } from '@/services/juejinCache'
+import type { JuejinArticle } from '@/services/juejin/juejinCache'
 
 defineProps<{
   article: JuejinArticle

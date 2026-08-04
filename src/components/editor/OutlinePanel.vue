@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { NButton, NIcon, NText, NScrollbar } from 'naive-ui'
 import { ListOutline, ChevronBackOutline } from '@vicons/ionicons5'
 import { h, type Component } from 'vue'
-import { useI18n } from '@/composables/useI18n'
+import { useI18n } from '@/composables/i18n/useI18n'
 
 const props = defineProps<{
   visible: boolean

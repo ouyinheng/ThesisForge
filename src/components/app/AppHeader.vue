@@ -9,8 +9,8 @@ import {
   ExpandOutline,
   PencilOutline
 } from "@vicons/ionicons5";
-import { useI18n } from "@/composables/useI18n";
-import { useLayout } from "@/composables/useLayout";
+import { useI18n } from "@/composables/i18n/useI18n";
+import { useLayout } from "@/composables/layout/useLayout";
 import { useSettingsStore } from "@/stores/settings";
 import { useRouter, useRoute } from "vue-router";
 import { isDesktop } from "@/services/storage";

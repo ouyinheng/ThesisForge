@@ -1,7 +1,7 @@
 <script setup lang="ts">
 defineOptions({ name: "juejin-article" });
 import { ref, computed, onMounted, onUnmounted, watch, h, nextTick, createApp } from "vue";
-import { openInIframe } from "@/composables/useExternalLink";
+import { openInIframe } from "@/composables/link/useExternalLink";
 import {
   NButton,
   NText,
@@ -17,14 +17,14 @@ import {
 } from "naive-ui";
 import { ArrowBackOutline, BookmarkOutline, ListOutline, CopyOutline } from "@vicons/ionicons5";
 import { useRoute, useRouter } from "vue-router";
-import { useI18n } from "@/composables/useI18n";
-import { getJuejinArticle, type JuejinArticle } from "@/services/juejinCache";
-import { getJuejinArticleContent } from "@/services/juejinContent";
+import { useI18n } from "@/composables/i18n/useI18n";
+import { getJuejinArticle, type JuejinArticle } from "@/services/juejin/juejinCache";
+import { getJuejinArticleContent } from "@/services/juejin/juejinContent";
 import { useBlogStore } from "@/stores/blog";
-import { useLayout } from "@/composables/useLayout";
-import { useContentReflow } from "@/composables/useContentReflow";
-import OutlinePanel from "@/components/OutlinePanel.vue";
-import AppPage from "@/components/AppPage.vue";
+import { useLayout } from "@/composables/layout/useLayout";
+import { useContentReflow } from "@/composables/editor/useContentReflow";
+import OutlinePanel from "@/components/editor/OutlinePanel.vue";
+import AppPage from "@/components/app/AppPage.vue";
 import type { Component } from "vue";
 
 const { sidebarCollapsed, sidebarWidth } = useLayout();

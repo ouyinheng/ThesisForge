@@ -1,8 +1,8 @@
 <script setup lang="ts">
 defineOptions({ name: "about" });
 import { NH1, NH2, NText, NDivider, NCard } from "naive-ui";
-import { useI18n } from "@/composables/useI18n";
-import AppPage from "@/components/AppPage.vue";
+import { useI18n } from "@/composables/i18n/useI18n";
+import AppPage from "@/components/app/AppPage.vue";
 
 const { t } = useI18n();
 

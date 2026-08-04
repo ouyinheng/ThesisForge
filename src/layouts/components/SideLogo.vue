@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { useSharedLayout } from '@/composables/useSharedLayout'
+import { useSharedLayout } from '@/composables/layout/useSharedLayout'
 
 const router = useRouter()
 const { sidebarCollapsed } = useSharedLayout()

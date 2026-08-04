@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import SideLogo from '@/layouts/components/SideLogo.vue'
-import AppSidebar from '@/components/AppSidebar.vue'
-import { useSharedLayout } from '@/composables/useSharedLayout'
+import AppSidebar from '@/components/app/AppSidebar.vue'
+import { useSharedLayout } from '@/composables/layout/useSharedLayout'
 
 const { sidebarCollapsed } = useSharedLayout()
 </script>

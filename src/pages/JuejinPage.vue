@@ -23,11 +23,11 @@ import {
 } from "naive-ui";
 import { RefreshOutline, SearchOutline, CloseCircleOutline } from "@vicons/ionicons5";
 import { useRouter } from "vue-router";
-import { useI18n } from "@/composables/useI18n";
-import { putJuejinArticle, type JuejinArticle } from "@/services/juejinCache";
+import { useI18n } from "@/composables/i18n/useI18n";
+import { putJuejinArticle, type JuejinArticle } from "@/services/juejin/juejinCache";
 import { useJuejinStore } from "@/stores/juejin";
-import JuejinCard from "@/components/JuejinCard.vue";
-import AppPage from "@/components/AppPage.vue";
+import JuejinCard from "@/components/widget/JuejinCard.vue";
+import AppPage from "@/components/app/AppPage.vue";
 
 const { t } = useI18n();
 const router = useRouter();

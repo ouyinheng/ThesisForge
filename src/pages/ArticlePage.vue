@@ -26,13 +26,13 @@ import {
 import { h, type Component } from "vue";
 import { NIcon } from "naive-ui";
 import { useRoute, useRouter } from "vue-router";
-import { useI18n } from "@/composables/useI18n";
+import { useI18n } from "@/composables/i18n/useI18n";
 import { useBlogStore } from "@/stores/blog";
 import { useSettingsStore } from "@/stores/settings";
-import { useLayout } from "@/composables/useLayout";
-import { useContentReflow } from "@/composables/useContentReflow";
-import OutlinePanel from "@/components/OutlinePanel.vue";
-import AppPage from "@/components/AppPage.vue";
+import { useLayout } from "@/composables/layout/useLayout";
+import { useContentReflow } from "@/composables/editor/useContentReflow";
+import OutlinePanel from "@/components/editor/OutlinePanel.vue";
+import AppPage from "@/components/app/AppPage.vue";
 import { exportToMarkdown, exportToImage, exportToPDF, exportToHTML } from "@/services/exporter";
 import type { Article } from "@/types";
 

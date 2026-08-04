@@ -10,7 +10,7 @@ import {
 } from "@vicons/ionicons5";
 import { useTabsStore } from "@/stores/tabs";
 import { useRouter } from "vue-router";
-import { useI18n } from "@/composables/useI18n";
+import { useI18n } from "@/composables/i18n/useI18n";
 
 const { t } = useI18n();
 const tabsStore = useTabsStore();

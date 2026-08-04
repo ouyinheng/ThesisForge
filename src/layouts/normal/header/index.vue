@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { inject } from 'vue'
-import AppTabs from '@/components/AppTabs.vue'
-import { useSharedLayout } from '@/composables/useSharedLayout'
+import AppTabs from '@/components/app/AppTabs.vue'
+import { useSharedLayout } from '@/composables/layout/useSharedLayout'
 import { useTabsStore } from '@/stores/tabs'
 import {
   SunnyOutline,
@@ -11,7 +11,7 @@ import {
 import { NIcon, NButton } from 'naive-ui'
 import { h } from 'vue'
 import { useSettingsStore } from '@/stores/settings'
-import { useI18n } from '@/composables/useI18n'
+import { useI18n } from '@/composables/i18n/useI18n'
 
 const { t } = useI18n()
 const settings = useSettingsStore()
