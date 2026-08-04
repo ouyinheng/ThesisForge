@@ -634,14 +634,14 @@ const greeting = computed(() => {
 
 .ring-percent {
   font-family: var(--font-mono);
-  font-size: 28px;
+  font-size: var(--fs-2xl);
   font-weight: 700;
   color: var(--color-text);
   line-height: 1;
 }
 
 .ring-percent-sign {
-  font-size: 13px;
+  font-size: var(--fs-sm);
   color: var(--color-text-tertiary);
 }
 
@@ -661,7 +661,7 @@ const greeting = computed(() => {
 
 .hs-num {
   font-family: var(--font-mono);
-  font-size: 20px;
+  font-size: var(--fs-xl);
   font-weight: 700;
   color: var(--color-text);
 
@@ -732,7 +732,7 @@ const greeting = computed(() => {
   padding: 0 4px;
 }
 
-.section-icon { font-size: 14px; }
+.section-icon { font-size: var(--fs-base); }
 .overdue-icon { color: #ef4444; }
 .today-icon { color: var(--color-primary); }
 .tmr-icon { color: #D97706; }
@@ -940,7 +940,7 @@ const greeting = computed(() => {
 }
 
 .confetti {
-  font-size: 48px;
+  font-size: var(--fs-3xl);
   animation: bounce 0.6s ease infinite alternate;
 }
 

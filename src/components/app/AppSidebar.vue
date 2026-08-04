@@ -149,7 +149,7 @@ function filterByTag(tag: string): void {
 }
 
 .tags-title {
-  font-size: 12px;
+  font-size: var(--fs-xs);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   display: block;

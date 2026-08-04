@@ -656,7 +656,7 @@ const currentGroupName = computed(() => {
   border-radius: 14px;
 }
 .bm-letter {
-  font-size: 20px;
+  font-size: var(--fs-xl);
   font-weight: 700;
   color: #fff;
   line-height: 1;

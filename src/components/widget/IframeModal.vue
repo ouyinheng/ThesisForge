@@ -83,7 +83,7 @@ function openInNewTab(): void {
 }
 
 .iframe-title {
-  font-size: 13px;
+  font-size: var(--fs-sm);
   color: var(--color-text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;

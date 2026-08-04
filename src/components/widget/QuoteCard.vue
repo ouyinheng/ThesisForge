@@ -97,7 +97,7 @@ onMounted(() => {
 .quote-text {
   display: block;
   font-family: var(--font-serif);
-  font-size: 15px;
+  font-size: var(--fs-base);
   line-height: 1.7;
   color: var(--color-text);
 }
@@ -105,7 +105,7 @@ onMounted(() => {
   display: block;
   margin-top: 10px;
   text-align: right;
-  font-size: 12px;
+  font-size: var(--fs-xs);
 }
 .quote-refresh {
   align-self: flex-end;

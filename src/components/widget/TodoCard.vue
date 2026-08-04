@@ -242,7 +242,7 @@ function goTodos() {
 
 .tw-stat-num {
   font-family: var(--font-mono);
-  font-size: 16px;
+  font-size: var(--fs-lg);
   font-weight: 700;
   color: var(--color-text);
 

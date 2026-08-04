@@ -234,7 +234,7 @@ function openSettings(): void {
   background: #fff7e6;
   border: 1px solid #ffd591;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: var(--fs-sm);
   color: #d46b08;
 }
 
@@ -257,7 +257,7 @@ function openSettings(): void {
 }
 
 .toolbar-title {
-  font-size: 14px;
+  font-size: var(--fs-base);
   font-weight: normal;
   color: var(--color-text-secondary);
 }

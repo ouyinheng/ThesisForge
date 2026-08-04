@@ -16,6 +16,9 @@ import type { Theme, LayoutMode, Locale } from '@/types'
 
 const WEATHER_CITY_KEY = 'pb-weather-city'
 const ACCENT_COLOR_KEY = 'pb-accent-color'
+const AVATAR_KEY = 'pb-avatar'
+const NICKNAME_KEY = 'pb-nickname'
+const FONT_SIZE_KEY = 'pb-font-size'
 
 function getStoredCity(): string {
   return localStorage.getItem(WEATHER_CITY_KEY) || '长沙'
@@ -31,6 +34,30 @@ function getStoredAccent(): string {
 function setStoredAccent(color: string): void {
   if (color) localStorage.setItem(ACCENT_COLOR_KEY, color)
   else localStorage.removeItem(ACCENT_COLOR_KEY)
+}
+
+function getStoredAvatar(): string {
+  return localStorage.getItem(AVATAR_KEY) || ''
+}
+function setStoredAvatar(data: string): void {
+  if (data) localStorage.setItem(AVATAR_KEY, data)
+  else localStorage.removeItem(AVATAR_KEY)
+}
+
+function getStoredNickname(): string {
+  return localStorage.getItem(NICKNAME_KEY) || ''
+}
+function setStoredNickname(name: string): void {
+  if (name) localStorage.setItem(NICKNAME_KEY, name)
+  else localStorage.removeItem(NICKNAME_KEY)
+}
+
+function getStoredFontSize(): number {
+  const v = localStorage.getItem(FONT_SIZE_KEY)
+  return v ? parseInt(v, 10) : 14
+}
+function setStoredFontSize(size: number): void {
+  localStorage.setItem(FONT_SIZE_KEY, String(size))
 }
 
 function adjustColor(hex: string, amount: number): string {
@@ -49,6 +76,9 @@ export const useSettingsStore = defineStore('settings', () => {
   const storagePath: Ref<string> = ref<string>('')
   const weatherCity: Ref<string> = ref<string>(getStoredCity())
   const accentColor: Ref<string> = ref<string>(getStoredAccent())
+  const avatar: Ref<string> = ref<string>(getStoredAvatar())
+  const nickname: Ref<string> = ref<string>(getStoredNickname())
+  const fontSize: Ref<number> = ref<number>(getStoredFontSize())
 
   watch(theme, (val) => {
     document.documentElement.setAttribute('data-theme', val)
@@ -68,6 +98,16 @@ export const useSettingsStore = defineStore('settings', () => {
   watch(accentColor, (val) => {
     setStoredAccent(val)
     applyAccentColor(val)
+  })
+  watch(avatar, (val) => {
+    setStoredAvatar(val)
+  })
+  watch(nickname, (val) => {
+    setStoredNickname(val)
+  })
+  watch(fontSize, (val) => {
+    setStoredFontSize(val)
+    document.documentElement.style.setProperty('--base-font-size', `${val}px`)
   })
 
   function applyAccentColor(color: string): void {
@@ -95,6 +135,7 @@ export const useSettingsStore = defineStore('settings', () => {
     storagePath.value = await getStoragePath()
     loaded.value = true
     applyAccentColor(accentColor.value)
+    document.documentElement.style.setProperty('--base-font-size', `${fontSize.value}px`)
   }
 
   async function changeStoragePath(newPath: string): Promise<void> {
@@ -143,6 +184,9 @@ export const useSettingsStore = defineStore('settings', () => {
     storagePath,
     weatherCity,
     accentColor,
+    avatar,
+    nickname,
+    fontSize,
     loaded,
     load,
     changeStoragePath,

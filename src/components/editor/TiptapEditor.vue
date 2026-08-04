@@ -305,7 +305,7 @@ function addImage(): void {
   background: transparent;
   color: var(--color-text-secondary);
   border-radius: var(--radius-sm);
-  font-size: 13px;
+  font-size: var(--fs-sm);
   font-weight: 600;
   transition: background var(--transition-fast), color var(--transition-fast);
   &:hover {

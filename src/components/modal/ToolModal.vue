@@ -101,7 +101,7 @@ function close() {
             type="textarea"
             :placeholder="t('tools.markdown.placeholder')"
             :autosize="{ minRows: 14, maxRows: 24 }"
-            style="font-family: 'JetBrains Mono', 'Fira Code', 'Source Code Pro', monospace; font-size: 13px"
+            style="font-family: 'JetBrains Mono', 'Fira Code', 'Source Code Pro', monospace; font-size: var(--fs-sm)"
           />
         </n-space>
       </n-tab-pane>
@@ -149,7 +149,7 @@ function close() {
   overflow-y: auto;
   padding: 8px 4px;
   line-height: 1.75;
-  font-size: 14px;
+  font-size: var(--fs-base);
 }
 .md-preview :deep(h1) { font-size: 1.6em; font-weight: 700; margin: 0.8em 0 0.4em; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.3em; }
 .md-preview :deep(h2) { font-size: 1.35em; font-weight: 600; margin: 0.8em 0 0.4em; }

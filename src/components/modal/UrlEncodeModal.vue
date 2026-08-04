@@ -73,7 +73,7 @@ function swap() {
         type="textarea"
         :placeholder="activeTab === 'encode' ? t('tools.url.encodePlaceholder') : t('tools.url.decodePlaceholder')"
         :autosize="{ minRows: 6, maxRows: 12 }"
-        style="font-family: 'JetBrains Mono', monospace; font-size: 13px"
+        style="font-family: 'JetBrains Mono', monospace; font-size: var(--fs-sm)"
       />
 
       <div style="text-align: center">
@@ -88,7 +88,7 @@ function swap() {
         type="textarea"
         readonly
         :autosize="{ minRows: 4, maxRows: 10 }"
-        style="font-family: 'JetBrains Mono', monospace; font-size: 13px"
+        style="font-family: 'JetBrains Mono', monospace; font-size: var(--fs-sm)"
         :placeholder="t('tools.url.resultPlaceholder')"
       />
 

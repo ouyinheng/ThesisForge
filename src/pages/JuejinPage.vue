@@ -566,7 +566,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   font-family: var(--font-serif);
-  font-size: 20px;
+  font-size: var(--fs-xl);
   font-weight: 700;
   color: #fff;
   background: linear-gradient(135deg, #1e80ff, #0066ff);
@@ -579,13 +579,13 @@ onBeforeUnmount(() => {
 
 .juejin-title {
   font-family: var(--font-serif) !important;
-  font-size: 24px;
+  font-size: var(--fs-2xl);
   margin: 0;
   line-height: 1.2;
 }
 
 .juejin-sub {
-  font-size: 13px;
+  font-size: var(--fs-sm);
 }
 
 /* Tabs + 刷新按钮容器 */
@@ -645,7 +645,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 0.4em;
-  font-size: 13px;
+  font-size: var(--fs-sm);
   color: var(--color-text-secondary);
 
   strong {

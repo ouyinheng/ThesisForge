@@ -263,7 +263,7 @@ function isClosable(tab: { pinned?: boolean }): boolean {
   border: 1px solid transparent !important;
   border-bottom: none !important;
   background: transparent !important;
-  font-size: 13px;
+  font-size: var(--fs-sm);
   color: var(--color-text-secondary);
   position: relative;
   transition: color 0.15s ease, background-color 0.15s ease;
@@ -328,7 +328,7 @@ function isClosable(tab: { pinned?: boolean }): boolean {
   width: 16px;
   height: 16px;
   margin-right: 4px;
-  font-size: 14px !important;
+  font-size: var(--fs-base) !important;
   color: var(--color-text-tertiary) !important;
   border-radius: 3px;
   transition: color 0.15s ease, background-color 0.15s ease;

@@ -181,7 +181,7 @@ function renderIcon(icon: Component) {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  font-size: 14px;
+  font-size: var(--fs-base);
   color: var(--color-text-secondary);
 }
 
@@ -199,7 +199,7 @@ function renderIcon(icon: Component) {
 }
 
 .card-arrow {
-  font-size: 13px;
+  font-size: var(--fs-sm);
   white-space: nowrap;
   transition:
     transform var(--transition-fast),

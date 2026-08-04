@@ -81,7 +81,7 @@ function formatCount(n: number): string {
 
 .card-title {
   font-family: var(--font-serif);
-  font-size: 16px;
+  font-size: var(--fs-lg);
   font-weight: 600;
   line-height: 1.4;
   margin: 0 0 0.4em;
@@ -93,7 +93,7 @@ function formatCount(n: number): string {
 }
 
 .card-brief {
-  font-size: 13px;
+  font-size: var(--fs-sm);
   line-height: 1.55;
   color: var(--color-text-secondary);
   margin: 0 0 0.6em;
@@ -114,11 +114,11 @@ function formatCount(n: number): string {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 12px;
+  font-size: var(--fs-xs);
   margin-top: 0.6em;
 }
 
 .card-stats {
-  font-size: 12px;
+  font-size: var(--fs-xs);
 }
 </style>

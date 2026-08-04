@@ -106,16 +106,16 @@ onMounted(() => {
 }
 .wm-temp {
   font-family: var(--font-mono);
-  font-size: 20px;
+  font-size: var(--fs-xl);
   font-weight: 700;
   color: var(--color-text);
 }
 .wm-city {
-  font-size: 12px;
+  font-size: var(--fs-xs);
   font-weight: 500;
 }
 .wm-desc {
-  font-size: 12px;
+  font-size: var(--fs-xs);
 }
 .wm-detail {
   font-size: 11px;

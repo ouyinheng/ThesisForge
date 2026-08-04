@@ -20,6 +20,7 @@ import {
 } from '@vicons/ionicons5'
 import { useI18n } from '@/composables/i18n/useI18n'
 import { useBlogStore } from '@/stores/blog'
+import { useSettingsStore } from '@/stores/settings'
 import { useRouter } from 'vue-router'
 import { type Component } from 'vue'
 // 工具箱弹窗
@@ -37,6 +38,7 @@ import AppPage from '@/components/app/AppPage.vue'
 
 const { t } = useI18n()
 const blogStore = useBlogStore()
+const settings = useSettingsStore()
 const router = useRouter()
 
 // 时钟
@@ -155,7 +157,10 @@ const version = '1.0.0'
     <!-- 顶部欢迎区 -->
     <section class="dashboard-hero">
       <div class="hero-left">
-        <NH1 class="hero-title">{{ greeting }}</NH1>
+        <div class="hero-greeting">
+          <NH1 class="hero-title">{{ greeting }}</NH1>
+          <NText v-if="settings.nickname" class="hero-nickname">，{{ settings.nickname }}</NText>
+        </div>
         <NText class="hero-subtitle">{{ dateStr }}</NText>
         <NText class="hero-time">{{ timeStr }}</NText>
       </div>
@@ -332,23 +337,39 @@ const version = '1.0.0'
 
 .hero-title {
   font-family: var(--font-serif) !important;
-  font-size: 36px;
+  font-size: var(--fs-3xl);
   margin: 0 !important;
   line-height: 1.2;
   color: var(--color-text);
+  display: inline;
+}
+
+.hero-greeting {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.hero-nickname {
+  font-family: var(--font-serif);
+  font-size: var(--fs-2xl);
+  font-weight: 500;
+  color: var(--color-primary);
+  line-height: 1.2;
 }
 
 .hero-subtitle {
   display: block;
   margin-top: 4px;
-  font-size: 13px;
+  font-size: var(--fs-sm);
   color: var(--color-text-tertiary);
 }
 
 .hero-time {
   display: block;
   margin-top: 8px;
-  font-size: 24px;
+  font-size: var(--fs-2xl);
   font-family: var(--font-mono);
   color: var(--color-primary);
   letter-spacing: 0.05em;
@@ -381,13 +402,13 @@ const version = '1.0.0'
 
 .weather-temp {
   font-family: var(--font-mono);
-  font-size: 20px;
+  font-size: var(--fs-xl);
   font-weight: 600;
   color: var(--color-text);
 }
 
 .weather-desc {
-  font-size: 13px;
+  font-size: var(--fs-sm);
   color: var(--color-text-secondary);
 }
 
@@ -431,14 +452,14 @@ const version = '1.0.0'
 
 .stat-value {
   font-family: var(--font-mono);
-  font-size: 24px;
+  font-size: var(--fs-2xl);
   font-weight: 600;
   color: var(--color-text);
   line-height: 1.1;
 }
 
 .stat-label {
-  font-size: 12px;
+  font-size: var(--fs-xs);
   color: var(--color-text-tertiary);
   margin-top: 2px;
 }
@@ -470,7 +491,7 @@ const version = '1.0.0'
 
 .panel-subtitle {
   margin: 1em 0 0.6em !important;
-  font-size: 14px;
+  font-size: var(--fs-base);
   color: var(--color-text-secondary);
 }
 
@@ -512,7 +533,7 @@ const version = '1.0.0'
   }
 
   .action-name {
-    font-size: 12px;
+    font-size: var(--fs-xs);
     color: var(--color-text-secondary);
   }
 
@@ -559,7 +580,7 @@ const version = '1.0.0'
 }
 
 .recent-title {
-  font-size: 14px;
+  font-size: var(--fs-base);
   color: var(--color-text);
   white-space: nowrap;
   overflow: hidden;
@@ -641,7 +662,7 @@ const version = '1.0.0'
 .quote-text {
   display: block;
   font-family: var(--font-serif);
-  font-size: 15px;
+  font-size: var(--fs-base);
   line-height: 1.7;
   color: var(--color-text);
 }
@@ -650,7 +671,7 @@ const version = '1.0.0'
   display: block;
   margin-top: 10px;
   text-align: right;
-  font-size: 12px;
+  font-size: var(--fs-xs);
 }
 
 .quote-refresh {
@@ -665,7 +686,7 @@ const version = '1.0.0'
   justify-content: center;
   gap: 12px;
   padding-top: 1em;
-  font-size: 12px;
+  font-size: var(--fs-xs);
   color: var(--color-text-tertiary);
 }
 

@@ -125,7 +125,7 @@ const indentMap: Record<number, string> = {
   padding: 6px 8px;
   border-radius: 4px;
   color: var(--color-text-secondary);
-  font-size: 13px;
+  font-size: var(--fs-sm);
   line-height: 1.4;
   white-space: nowrap;
   overflow: hidden;

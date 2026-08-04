@@ -39,7 +39,7 @@ const { sidebarCollapsed } = useSharedLayout()
   justify-content: center;
   font-family: var(--font-serif);
   font-weight: 700;
-  font-size: 14px;
+  font-size: var(--fs-base);
   flex-shrink: 0;
 }
 .brand-text {

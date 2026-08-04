@@ -138,9 +138,9 @@ function loadImage(src: string): Promise<HTMLImageElement> {
       >
         <n-upload-dragger>
           <div style="padding: 8px 0">
-            <n-text style="font-size: 14px">{{ t('tools.pdf.dragTip') }}</n-text>
+            <n-text style="font-size: var(--fs-base)">{{ t('tools.pdf.dragTip') }}</n-text>
             <br />
-            <n-text depth="3" style="font-size: 12px">{{ t('tools.pdf.supportTip') }}</n-text>
+            <n-text depth="3" style="font-size: var(--fs-xs)">{{ t('tools.pdf.supportTip') }}</n-text>
           </div>
         </n-upload-dragger>
       </n-upload>
@@ -161,7 +161,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
       <n-divider v-if="images.length" style="margin: 4px 0" />
 
       <n-space align="center">
-        <span style="font-size: 13px; color: #666">{{ t('tools.pdf.paperSize') }}</span>
+        <span style="font-size: var(--fs-sm); color: #666">{{ t('tools.pdf.paperSize') }}</span>
         <n-select v-model:value="paperSize" :options="paperOptions" style="width: 160px" size="small" />
       </n-space>
 
@@ -192,7 +192,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   border: none;
   background: #d12f2f;
   color: #fff;
-  font-size: 12px;
+  font-size: var(--fs-xs);
   cursor: pointer;
   display: flex;
   align-items: center;

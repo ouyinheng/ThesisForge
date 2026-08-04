@@ -145,7 +145,7 @@ function clearAll() {
       </n-checkbox-group>
 
       <!-- 错误信息 -->
-      <div v-if="error" style="color: #d12f2f; font-size: 13px">{{ t('tools.regex.error') }}: {{ error }}</div>
+      <div v-if="error" style="color: #d12f2f; font-size: var(--fs-sm)">{{ t('tools.regex.error') }}: {{ error }}</div>
 
       <!-- 测试文本 -->
       <n-input
@@ -153,7 +153,7 @@ function clearAll() {
         type="textarea"
         :placeholder="t('tools.regex.textPlaceholder')"
         :autosize="{ minRows: 6, maxRows: 12 }"
-        style="font-size: 14px; line-height: 1.7"
+        style="font-size: var(--fs-base); line-height: 1.7"
       />
 
       <!-- 高亮预览 -->
@@ -162,7 +162,7 @@ function clearAll() {
       <!-- 匹配结果统计 -->
       <div v-if="matches.length && !error">
         <n-space align="center">
-          <span style="font-size: 13px; color: #666">
+          <span style="font-size: var(--fs-sm); color: #666">
             {{ t('tools.regex.matches') }}: <strong>{{ matches.length }}</strong>
           </span>
           <n-tag v-for="(m, i) in matches.slice(0, 10)" :key="i" size="small" type="success">
@@ -172,7 +172,7 @@ function clearAll() {
         </n-space>
       </div>
 
-      <div v-else-if="testText && pattern && !error" style="color: #999; font-size: 13px">
+      <div v-else-if="testText && pattern && !error" style="color: #999; font-size: var(--fs-sm)">
         {{ t('tools.regex.noMatch') }}
       </div>
 
@@ -196,7 +196,7 @@ function clearAll() {
   border: 1px solid #e5e7eb;
   border-radius: 6px;
   padding: 12px 16px;
-  font-size: 14px;
+  font-size: var(--fs-base);
   line-height: 1.8;
   max-height: 200px;
   overflow: auto;

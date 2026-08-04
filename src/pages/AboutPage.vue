@@ -46,7 +46,7 @@ const featureList = [{ icon: "", text: "" }];
 
 .about-description {
   font-family: var(--font-serif) !important;
-  font-size: 17px;
+  font-size: var(--fs-lg);
   line-height: 1.8;
   display: block;
   margin-bottom: 1em;
@@ -65,7 +65,7 @@ const featureList = [{ icon: "", text: "" }];
     padding-left: 1.2em;
     margin-bottom: 0.5em;
     font-family: var(--font-serif);
-    font-size: 16px;
+    font-size: var(--fs-lg);
     &:before {
       content: "\2013";
       position: absolute;
@@ -76,7 +76,7 @@ const featureList = [{ icon: "", text: "" }];
 }
 
 .about-footer {
-  font-size: 14px;
+  font-size: var(--fs-base);
   display: block;
   text-align: center;
 }

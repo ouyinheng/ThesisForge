@@ -89,11 +89,11 @@ function minify() {
         type="textarea"
         :placeholder="t('tools.json.placeholder')"
         :autosize="{ minRows: 8, maxRows: 16 }"
-        style="font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 13px"
+        style="font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: var(--fs-sm)"
       />
 
       <n-space align="center" :size="16">
-        <span style="font-size: 13px; color: #666">{{ t('tools.json.indent') }}</span>
+        <span style="font-size: var(--fs-sm); color: #666">{{ t('tools.json.indent') }}</span>
         <n-select v-model:value="indent" :options="indentOptions" style="width: 120px" size="small" />
         <n-switch v-model:value="sortKeys" size="small">
           <template #checked>{{ t('tools.json.sortKeysOn') }}</template>
@@ -101,13 +101,13 @@ function minify() {
         </n-switch>
       </n-space>
 
-      <div v-if="error" style="color: #d12f2f; font-size: 13px; padding: 4px 0">
+      <div v-if="error" style="color: #d12f2f; font-size: var(--fs-sm); padding: 4px 0">
         {{ t('tools.json.error') }}: {{ error }}
       </div>
 
       <n-divider v-if="formatted" style="margin: 4px 0" />
       <div v-if="formatted">
-        <div style="font-size: 12px; color: #888; margin-bottom: 4px">{{ t('tools.json.result') }}</div>
+        <div style="font-size: var(--fs-xs); color: #888; margin-bottom: 4px">{{ t('tools.json.result') }}</div>
         <pre class="json-result">{{ formatted }}</pre>
       </div>
 
@@ -140,7 +140,7 @@ function minify() {
   border-radius: 6px;
   padding: 12px 16px;
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
-  font-size: 13px;
+  font-size: var(--fs-sm);
   line-height: 1.6;
   max-height: 300px;
   overflow: auto;

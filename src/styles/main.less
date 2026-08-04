@@ -15,6 +15,9 @@
   --font-serif: 'Source Serif 4', 'Georgia', 'Times New Roman', serif;
   --font-mono: 'IBM Plex Mono', 'JetBrains Mono', 'Fira Code', monospace;
 
+  /* 基础字号（可动态调整） */
+  --base-font-size: var(--fs-base);
+
   /* 间距节奏（4px 基准） */
   --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
   --sp-5: 24px; --sp-6: 32px; --sp-7: 48px;
@@ -28,13 +31,14 @@
   --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
   --shadow-md: 0 6px 20px rgba(15, 23, 42, 0.10);
 
-  /* 字阶 */
-  --fs-xs: 12px;
-  --fs-sm: 13px;
-  --fs-base: 15px;
-  --fs-lg: 18px;
-  --fs-xl: 24px;
-  --fs-2xl: 32px;
+  /* 字阶——基于 rem，随 --base-font-size 联动 */
+  --fs-xs: 0.857rem;   /* 12/14 */
+  --fs-sm: 0.929rem;   /* 13/14 */
+  --fs-base: 1rem;     /* 14 */
+  --fs-lg: 1.143rem;   /* 16/14 */
+  --fs-xl: 1.429rem;   /* 20/14 */
+  --fs-2xl: 1.714rem;  /* 24/14 */
+  --fs-3xl: 2.286rem;  /* 32/14 */
 
   /* 过渡 */
   --transition-fast: 0.15s ease;
@@ -72,6 +76,7 @@ body {
   height: 100%;
   overflow: hidden;
   font-family: var(--font-sans);
+  font-size: var(--base-font-size);
   color: var(--color-text);
   background-color: var(--color-bg);
   line-height: 1.6;
@@ -121,9 +126,9 @@ body {
 .mx-6 { margin-left: 6px; margin-right: 6px; }
 .f-c-c { display: flex; justify-content: center; align-items: center; }
 .max-w-140 { max-width: 140px; }
-.text-16 { font-size: 16px; }
-.text-18 { font-size: 18px; }
-.text-22 { font-size: 22px; }
+.text-16 { font-size: var(--fs-lg); }
+.text-18 { font-size: var(--fs-lg); }
+.text-22 { font-size: var(--fs-xl); }
 .font-bold { font-weight: bold; }
 .opacity-20 { opacity: 0.2; }
 .bg-transparent { background: transparent; }
@@ -206,13 +211,13 @@ button {
   }
   h3 {
     font-family: var(--font-serif);
-    font-size: 20px;
+    font-size: var(--fs-xl);
     font-weight: 600;
     margin: 1.5em 0 0.6em;
   }
   h4 {
     font-family: var(--font-serif);
-    font-size: 17px;
+    font-size: var(--fs-lg);
     font-weight: 600;
     margin: 1.3em 0 0.5em;
   }
@@ -264,7 +269,7 @@ button {
   }
   code {
     font-family: var(--font-mono);
-    font-size: 14px;
+    font-size: var(--fs-base);
     background: var(--color-bg-tertiary);
     padding: 0.15em 0.4em;
     border-radius: 3px;
@@ -278,7 +283,7 @@ button {
     code {
       background: none;
       padding: 0;
-      font-size: 13.5px;
+      font-size: var(--fs-sm);
       line-height: 1.65;
     }
   }

@@ -64,7 +64,7 @@ function copyStats() {
         type="textarea"
         :placeholder="t('tools.wordcount.placeholder')"
         :autosize="{ minRows: 8, maxRows: 16 }"
-        style="font-size: 14px"
+        style="font-size: var(--fs-base)"
       />
 
       <template v-if="stats">

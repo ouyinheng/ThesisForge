@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, inject, type Component } from "vue";
-import { NButton, NButtonGroup, NIcon, NTooltip } from "naive-ui";
+import { NButton, NButtonGroup, NIcon, NTooltip, NAvatar } from "naive-ui";
 import {
   SunnyOutline,
   MoonOutline,
@@ -131,6 +131,20 @@ function winClose(): void {
         </NTooltip>
       </NButtonGroup>
 
+      <!-- 用户头像 -->
+      <div class="header-avatar" @click="handleOpenSettings">
+        <NAvatar
+          :size="28"
+          :src="settings.avatar"
+          round
+          class="avatar-display"
+        >
+          <span v-if="!settings.avatar" class="avatar-text">
+            {{ (settings.nickname || '?').charAt(0).toUpperCase() }}
+          </span>
+        </NAvatar>
+      </div>
+
       <!-- Windows 窗口控制 -->
       <div class="window-controls" v-if="isWindows && isElectron">
         <button class="win-btn" @click="winMinimize">
@@ -196,7 +210,7 @@ function winClose(): void {
 
 .header-brand {
   font-family: var(--font-serif);
-  font-size: 18px;
+  font-size: var(--fs-lg);
   font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--color-text);
@@ -234,7 +248,7 @@ function winClose(): void {
 
   :deep(.n-menu-item-content) {
     padding: 0 0.8em;
-    font-size: 14px;
+    font-size: var(--fs-base);
     height: 100%;
     border-bottom: 2px solid transparent;
     overflow: hidden;
@@ -268,6 +282,28 @@ function winClose(): void {
       background var(--transition-fast),
       color var(--transition-fast);
   }
+}
+
+.header-avatar {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+}
+
+.avatar-display {
+  border: 1.5px solid var(--color-border);
+  transition: border-color var(--transition-fast);
+}
+
+.header-avatar:hover .avatar-display {
+  border-color: var(--color-primary);
+}
+
+.avatar-text {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--color-primary);
 }
 
 /* Windows 窗口控制按钮 */

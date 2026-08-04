@@ -586,7 +586,7 @@ onMounted(() => {
     border-radius: 6px;
     background: rgba(255, 255, 255, 0.92);
     color: #4b5563;
-    font-size: 12px;
+    font-size: var(--fs-xs);
     font-family: var(--font-sans);
     display: flex;
     align-items: center;
