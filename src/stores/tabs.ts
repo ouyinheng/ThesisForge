@@ -61,6 +61,8 @@ const TITLE_MAP: Record<string, string> = {
   'juejin-article': '掘金文章',
   'todos': '待办',
   'collections': '收藏夹',
+  'novel-bookshelf': '作品书架',
+  'novel-write': '写作台',
   'about': '关于',
 }
 
@@ -74,6 +76,8 @@ const TITLE_MAP_EN: Record<string, string> = {
   'juejin-article': 'Juejin Article',
   'todos': 'Todos',
   'collections': 'Collections',
+  'novel-bookshelf': 'Bookshelf',
+  'novel-write': 'Writer',
   'about': 'About',
 }
 

@@ -10,6 +10,8 @@ import TodoPage from "@/pages/TodoPage.vue";
 import CollectionPage from "@/pages/CollectionPage.vue";
 import VideoStationPage from "@/pages/VideoStationPage.vue";
 import VideoDetailPage from "@/pages/VideoDetailPage.vue";
+import NovelBookshelfPage from "@/pages/NovelBookshelfPage.vue";
+import NovelWriterPage from "@/pages/NovelWriterPage.vue";
 
 const routes: RouteRecordRaw[] = [
   // 首页 default layout (由 settingsStore.layout 决定，默认 'normal')
@@ -37,6 +39,10 @@ const routes: RouteRecordRaw[] = [
   // 视频站
   { path: "/video", name: "video-station", component: VideoStationPage },
   { path: "/video/:id", name: "video-detail", component: VideoDetailPage },
+
+  // 码字台
+  { path: "/novel", name: "novel-bookshelf", component: NovelBookshelfPage },
+  { path: "/novel/:id", name: "novel-write", component: NovelWriterPage },
 ];
 
 const router = createRouter({
