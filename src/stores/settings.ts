@@ -14,6 +14,8 @@ import {
 } from '@/services/storage'
 import type { Theme, LayoutMode, Locale } from '@/types'
 
+const CORS_PROXY_KEY = 'pb-cors-proxy'
+const VIDEO_STATION_KEY = 'pb-video-station'
 const WEATHER_CITY_KEY = 'pb-weather-city'
 const ACCENT_COLOR_KEY = 'pb-accent-color'
 const AVATAR_KEY = 'pb-avatar'
@@ -26,6 +28,22 @@ function getStoredCity(): string {
 function setStoredCity(city: string): void {
   if (city) localStorage.setItem(WEATHER_CITY_KEY, city)
   else localStorage.removeItem(WEATHER_CITY_KEY)
+}
+
+function getStoredCorsProxy(): string {
+  return localStorage.getItem(CORS_PROXY_KEY) || ''
+}
+function setStoredCorsProxy(url: string): void {
+  if (url) localStorage.setItem(CORS_PROXY_KEY, url)
+  else localStorage.removeItem(CORS_PROXY_KEY)
+}
+
+function getStoredVideoStation(): string {
+  return localStorage.getItem(VIDEO_STATION_KEY) || 'https://www.4kcz.com'
+}
+function setStoredVideoStation(url: string): void {
+  if (url) localStorage.setItem(VIDEO_STATION_KEY, url)
+  else localStorage.removeItem(VIDEO_STATION_KEY)
 }
 
 function getStoredAccent(): string {
@@ -79,6 +97,8 @@ export const useSettingsStore = defineStore('settings', () => {
   const avatar: Ref<string> = ref<string>(getStoredAvatar())
   const nickname: Ref<string> = ref<string>(getStoredNickname())
   const fontSize: Ref<number> = ref<number>(getStoredFontSize())
+  const corsProxy: Ref<string> = ref<string>(getStoredCorsProxy())
+  const videoStation: Ref<string> = ref<string>(getStoredVideoStation())
 
   watch(theme, (val) => {
     document.documentElement.setAttribute('data-theme', val)
@@ -108,6 +128,12 @@ export const useSettingsStore = defineStore('settings', () => {
   watch(fontSize, (val) => {
     setStoredFontSize(val)
     document.documentElement.style.setProperty('--base-font-size', `${val}px`)
+  })
+  watch(corsProxy, (val) => {
+    setStoredCorsProxy(val)
+  })
+  watch(videoStation, (val) => {
+    setStoredVideoStation(val)
   })
 
   function applyAccentColor(color: string): void {
@@ -188,6 +214,8 @@ export const useSettingsStore = defineStore('settings', () => {
     nickname,
     fontSize,
     loaded,
+    corsProxy,
+    videoStation,
     load,
     changeStoragePath,
     resetStoragePath,

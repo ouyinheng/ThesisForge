@@ -210,7 +210,7 @@ const ACCENT_PRESETS = [
   <NModal
     :show="show"
     preset="card"
-    :style="{ width: '480px' }"
+    :style="{ width: '580px' }"
     size="medium"
     :bordered="false"
     :closable="false"
@@ -483,6 +483,23 @@ const ACCENT_PRESETS = [
           </div>
         </template>
       </div>
+
+      <!-- 厂长资源地址 -->
+      <div class="setting-block">
+        <div class="block-header">
+          <NText class="setting-label">厂长资源地址</NText>
+        </div>
+        <NInput
+          :value="settings.videoStation"
+          @update:value="settings.videoStation = $event || ''"
+          size="small"
+          placeholder="https://www.4kcz.com"
+        />
+        <NText depth="3" class="hint-text">
+          web 端通过 Vite 代理自动转发（无需 CORS 配置），electron 直连访问
+        </NText>
+      </div>
+
     </div>
   </NModal>
 </template>
@@ -501,6 +518,8 @@ const ACCENT_PRESETS = [
   display: flex;
   flex-direction: column;
   gap: var(--sp-5);
+  max-height: 650px;
+  overflow: auto;
 }
 
 .setting-profile-block {
@@ -631,6 +650,32 @@ const ACCENT_PRESETS = [
 :deep(.path-empty .n-input__input-el) {
   color: var(--color-danger, #e03e3e) !important;
   font-style: italic;
+}
+
+.setting-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.block-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.block-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hint-text {
+  font-size: var(--fs-xs);
 }
 
 .path-readonly {

@@ -8,6 +8,8 @@ import JuejinPage from "@/pages/JuejinPage.vue";
 import JuejinArticlePage from "@/pages/JuejinArticlePage.vue";
 import TodoPage from "@/pages/TodoPage.vue";
 import CollectionPage from "@/pages/CollectionPage.vue";
+import VideoStationPage from "@/pages/VideoStationPage.vue";
+import VideoDetailPage from "@/pages/VideoDetailPage.vue";
 
 const routes: RouteRecordRaw[] = [
   // 首页 default layout (由 settingsStore.layout 决定，默认 'normal')
@@ -30,7 +32,11 @@ const routes: RouteRecordRaw[] = [
 
   // 掘金
   { path: "/juejin", name: "juejin", component: JuejinPage },
-  { path: "/juejin/:id", name: "juejin-article", component: JuejinArticlePage }
+  { path: "/juejin/:id", name: "juejin-article", component: JuejinArticlePage },
+
+  // 视频站
+  { path: "/video", name: "video-station", component: VideoStationPage },
+  { path: "/video/:id", name: "video-detail", component: VideoDetailPage },
 ];
 
 const router = createRouter({

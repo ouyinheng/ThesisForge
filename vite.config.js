@@ -60,6 +60,17 @@ export default defineConfig({
           })
         },
       },
+      // 厂长资源（4kcz）无 CORS 头，web 端通过 Vite 开发代理转发，electron 直连
+      '/video-station': {
+        target: 'https://www.4kcz.com',
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/video-station/, ''),
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq) => {
+            proxyReq.removeHeader('referer')
+          })
+        },
+      },
     },
   },
 })

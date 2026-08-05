@@ -10,6 +10,8 @@ import {
   GlobeOutline,
   CheckboxOutline,
   BookmarkOutline,
+  PlayCircleOutline,
+  FilmOutline,
 } from "@vicons/ionicons5";
 
 export function useNavMenu() {
@@ -46,6 +48,18 @@ export function useNavMenu() {
       ]
     },
     {
+      label: () => t("nav.video"),
+      key: "video",
+      icon: renderIcon(PlayCircleOutline),
+      children: [
+        {
+          label: () => t("nav.videoFactory"),
+          key: "video-factory",
+          icon: renderIcon(FilmOutline)
+        }
+      ]
+    },
+    {
       label: () => "To-Do",
       key: "todos",
       icon: renderIcon(CheckboxOutline)
@@ -73,6 +87,7 @@ export function useNavMenu() {
     if (path === "/" || path.startsWith("/editor")) return "home";
     if (path === "/papers" || path.startsWith("/article/")) return "papers";
     if (path === "/juejin" || path.startsWith("/juejin/")) return "juejin";
+    if (path === "/video" || path.startsWith("/video/")) return "video-factory";
     if (path === "/todos" || path.startsWith("/todos")) return "todos";
     if (path === "/collections" || path.startsWith("/collections")) return "collections";
     if (path === "/about") return "about";
@@ -87,6 +102,8 @@ export function useNavMenu() {
     papers: "/papers",
     about: "/about",
     juejin: "/juejin",
+    video: "/video",
+    "video-factory": "/video",
     todos: "/todos",
     collections: "/collections"
   };
