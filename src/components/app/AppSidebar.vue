@@ -1,12 +1,19 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { NMenu, NDivider, NText, NTag, NButton, NIcon } from "naive-ui";
-import { SettingsOutline, SunnyOutline, MoonOutline } from "@vicons/ionicons5";
+import {
+  SettingsOutline,
+  SunnyOutline,
+  MoonOutline,
+  ChevronBackOutline,
+  ChevronForwardOutline,
+} from "@vicons/ionicons5";
 import { useI18n } from "@/composables/i18n/useI18n";
 import { useBlogStore } from "@/stores/blog";
 import { useSettingsStore } from "@/stores/settings";
 import { useRouter, useRoute } from "vue-router";
 import { useNavMenu } from "@/composables/nav/useNavMenu";
+import { useSharedLayout } from "@/composables/layout/useSharedLayout";
 
 const props = defineProps<{
   collapsed: boolean;
@@ -18,6 +25,10 @@ const settings = useSettingsStore();
 const router = useRouter();
 const route = useRoute();
 const { navMenuOptions, activeKey, handleSelect } = useNavMenu();
+const { toggleSidebar } = useSharedLayout();
+
+// 收起/展开按钮：仅鼠标移入侧边栏时展示
+const showToggle = ref(false);
 
 const isSimpleLayout = computed(() => settings.layout === "simple");
 
@@ -50,7 +61,11 @@ function filterByTag(tag: string): void {
 </script>
 
 <template>
-  <div class="app-sidebar flex-col flex-1">
+  <div
+    class="app-sidebar flex-col flex-1"
+    @mouseenter="showToggle = true"
+    @mouseleave="showToggle = false"
+  >
     <!-- 菜单区：占满剩余高度，可滚动 -->
     <NMenu
       class="side-menu cus-scroll-y"
@@ -105,6 +120,17 @@ function filterByTag(tag: string): void {
         </NButton>
       </div>
     </div>
+
+    <!-- 收起/展开侧边栏按钮：位于侧边栏右侧边框中间，移入侧边栏才显示 -->
+    <button
+      v-show="showToggle"
+      class="sidebar-toggle"
+      type="button"
+      :title="props.collapsed ? '展开侧边栏' : '收起侧边栏'"
+      @click="toggleSidebar"
+    >
+      <NIcon :component="props.collapsed ? ChevronForwardOutline : ChevronBackOutline" :size="16" />
+    </button>
   </div>
 </template>
 
@@ -112,6 +138,35 @@ function filterByTag(tag: string): void {
 .app-sidebar {
   display: flex;
   min-height: 0;
+  position: relative;
+}
+/* 收起/展开按钮：悬浮在侧边栏右侧边框中间 */
+.sidebar-toggle {
+  position: absolute;
+  right: -13px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  transition:
+    color 0.2s,
+    border-color 0.2s,
+    background 0.2s;
+  outline: none;
+}
+.sidebar-toggle:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 .side-menu {
   flex: 1;

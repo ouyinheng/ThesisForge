@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { inject } from "vue";
-import { useSharedLayout } from "@/composables/layout/useSharedLayout";
 import { useSettingsStore } from "@/stores/settings";
 import { useRouter } from "vue-router";
 import { usePublishAction } from "@/composables/editor/usePublishAction";
@@ -16,7 +15,6 @@ import { NIcon, NButton } from "naive-ui";
 const settings = useSettingsStore();
 const router = useRouter();
 const { isEditorActive, publish: publishFromHeader } = usePublishAction();
-const { sidebarCollapsed, toggleSidebar } = useSharedLayout();
 
 // 注入 App.vue 提供的 openSettings
 const openSettings = inject<(() => void) | null>("openSettings", null);
@@ -24,10 +22,6 @@ const openSettings = inject<(() => void) | null>("openSettings", null);
 
 <template>
   <div class="app-title-bar">
-    <!-- 折叠按钮 -->
-    <div class="menu-collapse f-c-c cursor-pointer auto-bg-hover" @click="toggleSidebar">
-      <i :class="sidebarCollapsed ? 'i-line-md-menu-unfold-left' : 'i-line-md-menu-fold-left'" />
-    </div>
     <router-link class="title-logo" to="/">
       <span class="brand-mark">T</span>
       <span class="brand-text">ThesisForge</span>
@@ -102,22 +96,6 @@ const openSettings = inject<(() => void) | null>("openSettings", null);
   font-weight: 600;
   font-size: 15px;
   white-space: nowrap;
-}
-.menu-collapse {
-  width: 24px;
-  height: 24px;
-  font-size: 16px;
-  color: var(--color-text-secondary);
-  border-radius: 6px;
-  flex-shrink: 0;
-  -webkit-app-region: no-drag;
-  transition:
-    background 0.2s,
-    color 0.2s;
-}
-.menu-collapse:hover {
-  background: var(--color-fill-hover, rgba(128, 128, 128, 0.12));
-  color: var(--color-text);
 }
 .header-actions {
   gap: 4px;
