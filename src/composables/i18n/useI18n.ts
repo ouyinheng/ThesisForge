@@ -101,9 +101,9 @@ const messages = {
       },
     },
     about: {
-      title: '关于 PaperBlog',
+      title: '关于 ThesisForge',
       description:
-        'PaperBlog 是一个简约、专业的学术论文风格博客平台。专注于内容本身的写作与发布体验。',
+        'ThesisForge 是一个简约、专业的学术论文风格博客平台。专注于内容本身的写作与发布体验。',
       features: '核心功能',
       featureList: [
         '富文本编辑器，支持代码块、表格、图片等丰富格式',
@@ -361,9 +361,9 @@ const messages = {
       },
     },
     about: {
-      title: 'About PaperBlog',
+      title: 'About ThesisForge',
       description:
-        'PaperBlog is a minimal, professional academic-style blog platform. Focused on content-first writing and publishing experience.',
+        'ThesisForge is a minimal, professional academic-style blog platform. Focused on content-first writing and publishing experience.',
       features: 'Features',
       featureList: [
         'Rich text editor with code blocks, tables, images',

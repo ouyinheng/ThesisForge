@@ -19,10 +19,10 @@ const router = useRouter();
 const route = useRoute();
 const { navMenuOptions, activeKey, handleSelect } = useNavMenu();
 
-const isSimpleLayout = computed(() => settings.layout === 'simple');
+const isSimpleLayout = computed(() => settings.layout === "simple");
 
 function openSettings(): void {
-  window.dispatchEvent(new CustomEvent('open-settings-global'));
+  window.dispatchEvent(new CustomEvent("open-settings-global"));
 }
 
 const activeTag = computed<string | undefined>(() => {
@@ -67,10 +67,10 @@ function filterByTag(tag: string): void {
 
     <!-- 标签云区：仅展开时显示 -->
     <NDivider
-      v-if="blogStore.allTags.length && !props.collapsed"
+      v-if="blogStore.allTags.length && !props.collapsed && false"
       :style="{ margin: '8px 12px' }"
     />
-    <div class="sidebar-tags" v-if="blogStore.allTags.length && !props.collapsed">
+    <div class="sidebar-tags" v-if="blogStore.allTags.length && !props.collapsed && false">
       <NText depth="3" class="tags-title">Tags</NText>
       <div class="tags-list">
         <NTag

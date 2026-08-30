@@ -2,6 +2,7 @@ import { h, type Component, computed } from "vue";
 import { NIcon, type MenuOption } from "naive-ui";
 import { useI18n } from "@/composables/i18n/useI18n";
 import { useRoute, useRouter, type RouteLocationRaw } from "vue-router";
+import { openInIframe } from "@/composables/link/useExternalLink";
 import {
   HomeOutline,
   DocumentTextOutline,
@@ -40,6 +41,11 @@ export function useNavMenu() {
           label: () => t("nav.juejin"),
           key: "juejin",
           icon: renderIcon(NewspaperOutline)
+        },
+        {
+          label: () => "构石期刊官网",
+          key: "goushi",
+          icon: renderIcon(GlobeOutline)
         }
       ]
     },
@@ -76,11 +82,23 @@ export function useNavMenu() {
   };
 
   /**
+   * 外部官网入口（应用内 iframe 打开，不改变路由）
+   */
+  const externalUrls: Record<string, { url: string; label: string }> = {
+    goushi: { url: "https://shitjournal.org/", label: "构石期刊官网" },
+  };
+
+  /**
    * 菜单选择回调
    */
   function handleSelect(key: string): void {
     if (keyToRoute[key]) {
       router.push(keyToRoute[key]);
+      return;
+    }
+    const external = externalUrls[key];
+    if (external) {
+      openInIframe(external.url, external.label);
     }
   }
 

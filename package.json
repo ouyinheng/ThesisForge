@@ -1,5 +1,5 @@
 {
-  "name": "paperblog",
+  "name": "thesisforge",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -64,9 +64,9 @@
     "wait-on": "^9.1.0"
   },
   "build": {
-    "appId": "com.paperblog.app",
-    "productName": "PaperBlog",
-    "icon": "electron/PaperBlog.icns",
+    "appId": "com.thesisforge.app",
+    "productName": "ThesisForge",
+    "icon": "electron/icon.png",
     "directories": {
       "output": "release",
       "buildResources": "electron"
@@ -79,7 +79,7 @@
     ],
     "mac": {
       "category": "public.app-category.productivity",
-      "icon": "electron/PaperBlog.icns",
+      "icon": "electron/icon.png",
       "darkModeSupport": true,
       "target": [
         "dmg",
@@ -105,13 +105,13 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "PaperBlog",
+      "shortcutName": "ThesisForge",
       "deleteAppDataOnUninstall": false
     },
     "linux": {
       "icon": "electron",
       "category": "Office",
-      "executableName": "paperblog",
+      "executableName": "thesisforge",
       "target": [
         "AppImage"
       ]

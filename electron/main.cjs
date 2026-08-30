@@ -83,7 +83,8 @@ function createWindow() {
     height,
     minWidth: MIN_W,
     minHeight: MIN_H,
-    title: 'PaperBlog',
+    title: 'ThesisForge',
+    icon: path.join(__dirname, 'icon.png'),
     backgroundColor: '#fafaf9',
     show: false,
     webPreferences: {
@@ -180,7 +181,7 @@ function createTray() {
   // 若图标缺失则跳过托盘，避免启动崩溃
   if (!fs.existsSync(iconPath)) return
   tray = new Tray(iconPath)
-  tray.setToolTip('PaperBlog')
+  tray.setToolTip('ThesisForge')
   const contextMenu = Menu.buildFromTemplate([
     {
       label: '显示主窗口',
@@ -268,6 +269,12 @@ function createMenu() {
 app.whenReady().then(() => {
   setupIpcHandlers()
   createMenu()
+
+  // macOS：运行态（含 dev）设置 Dock 图标为自定义 logo
+  if (isMac && app.dock) {
+    app.dock.setIcon(path.join(__dirname, 'icon.png'))
+  }
+
   createWindow()
   createTray()
 

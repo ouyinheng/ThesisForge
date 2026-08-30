@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { inject } from "vue";
-import AppTabs from "@/components/app/AppTabs.vue";
 import { useSharedLayout } from "@/composables/layout/useSharedLayout";
-import { useTabsStore } from "@/stores/tabs";
 import { useSettingsStore } from "@/stores/settings";
 import { useRouter } from "vue-router";
 import { usePublishAction } from "@/composables/editor/usePublishAction";
@@ -19,7 +17,6 @@ const settings = useSettingsStore();
 const router = useRouter();
 const { isEditorActive, publish: publishFromHeader } = usePublishAction();
 const { sidebarCollapsed, toggleSidebar } = useSharedLayout();
-const tabsStore = useTabsStore();
 
 // 注入 App.vue 提供的 openSettings
 const openSettings = inject<(() => void) | null>("openSettings", null);
@@ -32,17 +29,9 @@ const openSettings = inject<(() => void) | null>("openSettings", null);
       <i :class="sidebarCollapsed ? 'i-line-md-menu-unfold-left' : 'i-line-md-menu-fold-left'" />
     </div>
     <router-link class="title-logo" to="/">
-      <span class="brand-mark">P</span>
-      <span class="brand-text">PaperBlog</span>
+      <span class="brand-mark">T</span>
+      <span class="brand-text">ThesisForge</span>
     </router-link>
-
-    <!-- Tab 栏 (flex-1 占满剩余) -->
-    <template v-if="tabsStore.showTabs">
-      <div class="tab-wrap w-0 flex-1 px-3">
-        <AppTabs class="w-full" />
-      </div>
-      <span class="mx-3 opacity-20">|</span>
-    </template>
 
     <!-- 右侧按钮 -->
     <div class="header-actions flex flex-shrink-0 items-center px-2 gap-1 ml-auto">
@@ -93,31 +82,31 @@ const openSettings = inject<(() => void) | null>("openSettings", null);
   -webkit-app-region: no-drag;
 }
 .brand-mark {
-  width: 20px;
-  height: 20px;
+  width: 26px;
+  height: 26px;
   background: var(--color-primary);
   color: #fff;
-  border-radius: 4px;
+  border-radius: 5px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-serif);
   font-weight: 700;
-  font-size: 12px;
+  font-size: 14px;
   flex-shrink: 0;
 }
 .brand-text {
-  margin-left: 6px;
+  margin-left: 8px;
   color: var(--color-text);
   font-family: var(--font-serif);
   font-weight: 600;
-  font-size: 12px;
+  font-size: 15px;
   white-space: nowrap;
 }
 .menu-collapse {
-  width: 28px;
-  height: 28px;
-  font-size: 18px;
+  width: 24px;
+  height: 24px;
+  font-size: 16px;
   color: var(--color-text-secondary);
   border-radius: 6px;
   flex-shrink: 0;
@@ -129,9 +118,6 @@ const openSettings = inject<(() => void) | null>("openSettings", null);
 .menu-collapse:hover {
   background: var(--color-fill-hover, rgba(128, 128, 128, 0.12));
   color: var(--color-text);
-}
-.tab-wrap {
-  -webkit-app-region: no-drag;
 }
 .header-actions {
   gap: 4px;

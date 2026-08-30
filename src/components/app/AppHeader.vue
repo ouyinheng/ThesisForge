@@ -66,7 +66,7 @@ function winClose(): void {
   <header class="app-header">
     <!-- 品牌 -->
     <div class="header-brand">
-      <!-- PaperBlog -->
+      <!-- ThesisForge -->
     </div>
 
     <!-- 中间填充区 -->

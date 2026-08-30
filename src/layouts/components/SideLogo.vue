@@ -8,12 +8,12 @@ const { sidebarCollapsed } = useSharedLayout()
 
 <template>
   <router-link class="side-logo" to="/">
-    <span class="brand-mark">P</span>
+    <span class="brand-mark">T</span>
     <h2
       v-show="!sidebarCollapsed"
       class="brand-text ml-10 max-w-140 flex-shrink-0 text-16 color-primary font-bold"
     >
-      PaperBlog
+      ThesisForge
     </h2>
   </router-link>
 </template>

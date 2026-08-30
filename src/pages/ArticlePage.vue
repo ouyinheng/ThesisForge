@@ -191,7 +191,7 @@ function slugify(title: string): string {
       .toLowerCase()
       .replace(/[^\w一-龥]+/g, "-")
       .replace(/^-+|-+$/g, "")
-      .slice(0, 60) || "paperblog"
+      .slice(0, 60) || "thesisforge"
   );
 }
 

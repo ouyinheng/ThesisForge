@@ -147,7 +147,7 @@ export async function exportToPDF(element: HTMLElement, title: string, opts: { b
 
   pdf.setFontSize(9)
   pdf.setTextColor(160)
-  pdf.text(title || 'PaperBlog', margin, 8)
+  pdf.text(title || 'ThesisForge', margin, 8)
 
   return pdf.output('blob')
 }
