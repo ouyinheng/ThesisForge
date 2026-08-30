@@ -6,12 +6,6 @@ import EditorPage from "@/pages/EditorPage.vue";
 import AboutPage from "@/pages/AboutPage.vue";
 import JuejinPage from "@/pages/JuejinPage.vue";
 import JuejinArticlePage from "@/pages/JuejinArticlePage.vue";
-import TodoPage from "@/pages/TodoPage.vue";
-import CollectionPage from "@/pages/CollectionPage.vue";
-import VideoStationPage from "@/pages/VideoStationPage.vue";
-import VideoDetailPage from "@/pages/VideoDetailPage.vue";
-import NovelBookshelfPage from "@/pages/NovelBookshelfPage.vue";
-import NovelWriterPage from "@/pages/NovelWriterPage.vue";
 
 const routes: RouteRecordRaw[] = [
   // 首页 default layout (由 settingsStore.layout 决定，默认 'normal')
@@ -22,12 +16,6 @@ const routes: RouteRecordRaw[] = [
   { path: "/article/:id", name: "article", component: ArticlePage },
   { path: "/about", name: "about", component: AboutPage },
 
-  // 待办页
-  { path: "/todos", name: "todos", component: TodoPage },
-
-  // 收藏夹
-  { path: "/collections", name: "collections", component: CollectionPage },
-
   // 编辑器沉浸式（无 header/sidebar）
   { path: "/editor", name: "editor-new", component: EditorPage },
   { path: "/editor/:id", name: "editor-edit", component: EditorPage },
@@ -36,13 +24,8 @@ const routes: RouteRecordRaw[] = [
   { path: "/juejin", name: "juejin", component: JuejinPage },
   { path: "/juejin/:id", name: "juejin-article", component: JuejinArticlePage },
 
-  // 视频站
-  { path: "/video", name: "video-station", component: VideoStationPage },
-  { path: "/video/:id", name: "video-detail", component: VideoDetailPage },
-
-  // 码字台
-  { path: "/novel", name: "novel-bookshelf", component: NovelBookshelfPage },
-  { path: "/novel/:id", name: "novel-write", component: NovelWriterPage },
+  // 兜底：被删除模块的旧链接或未定义路径一律回首页，避免空白页
+  { path: "/:pathMatch(.*)*", redirect: "/" },
 ];
 
 const router = createRouter({

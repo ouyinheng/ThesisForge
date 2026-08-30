@@ -63,6 +63,14 @@ const TITLE_MAP: Record<string, string> = {
   'collections': '收藏夹',
   'novel-bookshelf': '作品书架',
   'novel-write': '写作台',
+  'edu-dashboard': '班级工作台',
+  'edu-students': '学生管理',
+  'edu-attendance': '考勤管理',
+  'edu-grades': '成绩管理',
+  'edu-schedule': '课表管理',
+  'edu-seats': '座位表',
+  'edu-notices': '通知公告',
+  'job': '招聘情报',
   'about': '关于',
 }
 
@@ -78,6 +86,14 @@ const TITLE_MAP_EN: Record<string, string> = {
   'collections': 'Collections',
   'novel-bookshelf': 'Bookshelf',
   'novel-write': 'Writer',
+  'edu-dashboard': 'Class Dashboard',
+  'edu-students': 'Students',
+  'edu-attendance': 'Attendance',
+  'edu-grades': 'Grades',
+  'edu-schedule': 'Schedule',
+  'edu-seats': 'Seats',
+  'edu-notices': 'Notices',
+  'job': 'Recruitment',
   'about': 'About',
 }
 

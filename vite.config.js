@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import UnoCSS from 'unocss/vite'
 import { resolve } from 'path'
-import { cpSync, mkdirSync } from 'fs'
+import { cpSync, mkdirSync, existsSync } from 'fs'
 
 export default defineConfig({
   base: './',
@@ -22,6 +22,10 @@ export default defineConfig({
           resolve(__dirname, 'electron/preload.cjs'),
           resolve(electronDir, 'preload.cjs')
         )
+        const trayIcon = resolve(__dirname, 'electron/window-tray.png')
+        if (existsSync(trayIcon)) {
+          cpSync(trayIcon, resolve(electronDir, 'window-tray.png'))
+        }
       },
     },
   ],

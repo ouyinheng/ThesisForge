@@ -366,4 +366,11 @@ function addImage(): void {
 .tiptap-editor .ProseMirror p {
   margin-bottom: 0.8em;
 }
+/* 图片最大宽度不超过内容区域 */
+.tiptap-editor .ProseMirror img {
+  display: block;
+  max-width: 100% !important;
+  height: auto !important;
+  margin: 0.5em auto;
+}
 </style>

@@ -400,6 +400,11 @@ export async function getTheme(): Promise<Theme> {
   return theme || getSystemTheme()
 }
 
+/** 用户是否手动指定过主题（用于判断是否需跟随系统深色模式） */
+export async function hasManualTheme(): Promise<boolean> {
+  return Boolean(await backend.getPref(PREF_KEYS.THEME))
+}
+
 export async function setTheme(theme: Theme): Promise<void> {
   await backend.setPref(PREF_KEYS.THEME, theme)
 }
@@ -451,7 +456,7 @@ export default {
   deleteArticle,
   getTheme,
   setTheme,
-  getLayout,
+  hasManualTheme,
   setLayout,
   getLocale,
   setLocale,

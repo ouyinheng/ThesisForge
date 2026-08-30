@@ -1,20 +1,11 @@
 <script setup lang="ts">
 defineOptions({ name: "home" })
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { NH1, NH3, NText, NTag, NDivider, NIcon, NButton, NTooltip } from 'naive-ui'
+import { NH1, NH3, NText, NTag, NDivider, NIcon, NButton } from 'naive-ui'
 import {
   DocumentTextOutline,
-  PencilOutline,
-  BookOutline,
-  CalculatorOutline,
   TimeOutline,
-  SparklesOutline,
-  GlobeOutline,
-  CodeOutline,
-  ColorPaletteOutline,
   LibraryOutline,
-  CompassOutline,
-  FlashOutline,
   BarChartOutline,
   TrendingUpOutline,
 } from '@vicons/ionicons5'
@@ -22,17 +13,6 @@ import { useI18n } from '@/composables/i18n/useI18n'
 import { useBlogStore } from '@/stores/blog'
 import { useSettingsStore } from '@/stores/settings'
 import { useRouter } from 'vue-router'
-import { type Component } from 'vue'
-// 工具箱弹窗
-import ToolModal from '@/components/modal/ToolModal.vue'
-import WordCountModal from '@/components/modal/WordCountModal.vue'
-import JsonModal from '@/components/modal/JsonModal.vue'
-import UrlEncodeModal from '@/components/modal/UrlEncodeModal.vue'
-import RegexModal from '@/components/modal/RegexModal.vue'
-import ImageToPdfModal from '@/components/modal/ImageToPdfModal.vue'
-// 天气 & 待办卡片组件
-import WeatherCard from '@/components/widget/WeatherCard.vue'
-import TodoCard from '@/components/widget/TodoCard.vue'
 // 内容区容器
 import AppPage from '@/components/app/AppPage.vue'
 
@@ -115,37 +95,9 @@ const recentArticles = computed(() => {
     .slice(0, 5)
 })
 
-// Tools modal state
-const showMdModal = ref(false)
-const showWcModal = ref(false)
-const showJsonModal = ref(false)
-const showUrlModal = ref(false)
-const showRegexModal = ref(false)
-const showPdfModal = ref(false)
-
-// 工具快捷方式
-interface QuickTool {
-  name: string
-  icon: Component
-  desc: string
-  action: () => void
-  color: string
-}
-
-const quickTools = computed<QuickTool[]>(() => [
-  { name: 'Markdown', icon: CodeOutline, desc: '标记语言', action: () => { showMdModal.value = true }, color: '#1976d2' },
-  { name: '图片转PDF', icon: ColorPaletteOutline, desc: '文档生成', action: () => { showPdfModal.value = true }, color: '#d32f2f' },
-  { name: '字数统计', icon: CalculatorOutline, desc: '文本分析', action: () => { showWcModal.value = true }, color: '#388e3c' },
-  { name: 'JSON格式化', icon: FlashOutline, desc: '数据美化', action: () => { showJsonModal.value = true }, color: '#f57c00' },
-  { name: 'URL编码', icon: GlobeOutline, desc: '链接处理', action: () => { showUrlModal.value = true }, color: '#7b1fa2' },
-  { name: '正则测试', icon: SparklesOutline, desc: '表达式调试', action: () => { showRegexModal.value = true }, color: '#00796b' },
-])
-
-
 // 快捷操作
 function goWrite() { router.push('/editor') }
 function goPapers() { router.push('/papers') }
-function goJuejin() { router.push('/juejin') }
 function goArticle(id: string) { router.push(`/article/${id}`) }
 
 const version = '1.0.0'
@@ -163,9 +115,6 @@ const version = '1.0.0'
         </div>
         <NText class="hero-subtitle">{{ dateStr }}</NText>
         <NText class="hero-time">{{ timeStr }}</NText>
-      </div>
-      <div class="hero-right">
-        <WeatherCard style="min-width: 200px" />
       </div>
     </section>
 
@@ -201,44 +150,9 @@ const version = '1.0.0'
       </div>
     </section>
 
-    <!-- 快捷创作 + 最近文章 -->
+    <!-- 最近文章 + 写作活跃度 -->
     <div class="dashboard-grid">
-      <!-- 左侧：快捷创作 + 工具箱 -->
-      <section class="dashboard-panel">
-        <NH3 class="panel-title">
-          <NIcon :size="18"><PencilOutline /></NIcon>
-          {{ t('home.quickActions') }}
-        </NH3>
-        <NDivider :style="{ margin: '8px 0 12px' }" />
-        <div class="primary-actions">
-          <NButton type="primary" @click="goWrite">
-            <template #icon><NIcon><PencilOutline /></NIcon></template>
-            {{ t('home.recentCreate') }}
-          </NButton>
-          <NButton tertiary @click="goPapers">
-            <template #icon><NIcon><BookOutline /></NIcon></template>
-            {{ t('nav.papers') }}
-          </NButton>
-          <NButton tertiary @click="goJuejin">
-            <template #icon><NIcon><CompassOutline /></NIcon></template>
-            {{ t('nav.juejin') }}
-          </NButton>
-        </div>
-        <NH3 class="panel-subtitle">{{ t('home.toolbox') }}</NH3>
-        <div class="quick-actions">
-          <NTooltip trigger="hover" v-for="tool in quickTools" :key="tool.name" placement="bottom">
-            <template #trigger>
-              <button class="action-btn" :style="{ '--accent': tool.color }" @click="tool.action()">
-                <NIcon :size="22"><component :is="tool.icon" /></NIcon>
-                <span class="action-name">{{ tool.name }}</span>
-              </button>
-            </template>
-            {{ tool.desc }}
-          </NTooltip>
-        </div>
-      </section>
-
-      <!-- 右侧：最近文章 -->
+      <!-- 最近文章 -->
       <section class="dashboard-panel">
         <NH3 class="panel-title">
           <NIcon :size="18"><TimeOutline /></NIcon>
@@ -268,10 +182,8 @@ const version = '1.0.0'
           <NButton text type="primary" size="small" @click="goWrite">{{ t('home.recentCreate') }}</NButton>
         </NText>
       </section>
-    </div>
 
-    <!-- 写作活跃度 + 每日一言 -->
-    <div class="dashboard-grid">
+      <!-- 写作活跃度 -->
       <section class="dashboard-panel">
         <div class="panel-title-row">
           <NH3 class="panel-title">
@@ -295,8 +207,6 @@ const version = '1.0.0'
           <div class="heatmap-cell level-3"></div>
         </div>
       </section>
-
-      <TodoCard />
     </div>
 
     <!-- Footer 状态条 -->
@@ -308,14 +218,6 @@ const version = '1.0.0'
       <span>{{ t('home.footerVersion') }} {{ version }}</span>
     </footer>
   </div>
-
-    <!-- 工具箱弹窗 -->
-    <ToolModal v-model:show="showMdModal" />
-    <WordCountModal v-model:show="showWcModal" />
-    <JsonModal v-model:show="showJsonModal" />
-    <UrlEncodeModal v-model:show="showUrlModal" />
-    <RegexModal v-model:show="showRegexModal" />
-    <ImageToPdfModal v-model:show="showPdfModal" />
   </AppPage>
 </template>
 

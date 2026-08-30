@@ -34,3 +34,16 @@ contextBridge.exposeInMainWorld('__windowBridge', {
 ipcRenderer.on('env:platform', (_, platform) => {
   window.__PLATFORM__ = platform
 })
+
+// 系统深色模式订阅（跟随系统 + 手动主题双向联动）
+function subscribeTheme(cb) {
+  if (typeof cb !== 'function') return
+  const handler = (_, isDark) => cb(Boolean(isDark))
+  ipcRenderer.on('env:theme', handler)
+  return () => ipcRenderer.removeListener('env:theme', handler)
+}
+
+contextBridge.exposeInMainWorld('__themeBridge', {
+  isDark: () => ipcRenderer.invoke('env:getTheme'),
+  subscribe: subscribeTheme,
+})

@@ -41,7 +41,8 @@
     "turndown": "^7.2.4",
     "turndown-plugin-gfm": "^1.0.2",
     "vue": "^3.4.0",
-    "vue-router": "^4.4.0"
+    "vue-router": "^4.4.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@iconify-json/carbon": "^1.1.36",
@@ -67,24 +68,53 @@
     "productName": "PaperBlog",
     "icon": "electron/PaperBlog.icns",
     "directories": {
-      "output": "release"
+      "output": "release",
+      "buildResources": "electron"
     },
+    "asar": true,
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
     "files": [
       "dist/**/*",
       "electron/**/*"
     ],
     "mac": {
       "category": "public.app-category.productivity",
+      "icon": "electron/PaperBlog.icns",
+      "darkModeSupport": true,
       "target": [
-        "dir",
+        "dmg",
         "zip"
       ]
     },
+    "dmg": {
+      "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
+    },
     "win": {
-      "target": "nsis"
+      "icon": "electron/icon.png",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "PaperBlog",
+      "deleteAppDataOnUninstall": false
     },
     "linux": {
-      "target": "AppImage"
+      "icon": "electron",
+      "category": "Office",
+      "executableName": "paperblog",
+      "target": [
+        "AppImage"
+      ]
     }
   }
 }

@@ -4,15 +4,21 @@ import {
   SunnyOutline,
   MoonOutline,
   SettingsOutline,
+  PencilOutline,
+  PaperPlaneOutline,
 } from '@vicons/ionicons5'
 import { NIcon, NButton } from 'naive-ui'
 import { h } from 'vue'
 import { useSettingsStore } from '@/stores/settings'
 import { useI18n } from '@/composables/i18n/useI18n'
 import { useSharedLayout } from '@/composables/layout/useSharedLayout'
+import { useRouter } from 'vue-router'
+import { usePublishAction } from '@/composables/editor/usePublishAction'
 
 const { t } = useI18n()
 const settings = useSettingsStore()
+const router = useRouter()
+const { isEditorActive, publish: publishFromHeader } = usePublishAction()
 const { sidebarCollapsed, toggleSidebar } = useSharedLayout()
 const openSettings = inject<(() => void) | null>('openSettings', null)
 
@@ -38,6 +44,18 @@ function renderIcon(icon: any) {
 
     <!-- 右侧按钮 -->
     <div class="header-actions flex flex-shrink-0 items-center px-12 text-18">
+      <NButton
+        type="primary"
+        size="small"
+        class="write-btn mr-8"
+        @click="isEditorActive ? publishFromHeader() : router.push('/editor')"
+      >
+        <template #icon>
+          <NIcon :component="isEditorActive ? PaperPlaneOutline : PencilOutline" />
+        </template>
+        {{ isEditorActive ? '发布文章' : '写文章' }}
+      </NButton>
+
       <NButton quaternary circle size="small" @click="settings.toggleTheme">
         <template #icon>
           <NIcon :component="settings.theme === 'dark' ? SunnyOutline : MoonOutline" />

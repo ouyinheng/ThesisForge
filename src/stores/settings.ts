@@ -3,6 +3,7 @@ import { ref, watch, type Ref } from 'vue'
 import {
   getTheme,
   setTheme,
+  hasManualTheme,
   getLayout,
   setLayout,
   getLocale,
@@ -15,7 +16,6 @@ import {
 import type { Theme, LayoutMode, Locale } from '@/types'
 
 const CORS_PROXY_KEY = 'pb-cors-proxy'
-const VIDEO_STATION_KEY = 'pb-video-station'
 const WEATHER_CITY_KEY = 'pb-weather-city'
 const ACCENT_COLOR_KEY = 'pb-accent-color'
 const AVATAR_KEY = 'pb-avatar'
@@ -36,14 +36,6 @@ function getStoredCorsProxy(): string {
 function setStoredCorsProxy(url: string): void {
   if (url) localStorage.setItem(CORS_PROXY_KEY, url)
   else localStorage.removeItem(CORS_PROXY_KEY)
-}
-
-function getStoredVideoStation(): string {
-  return localStorage.getItem(VIDEO_STATION_KEY) || 'https://www.4kcz.com'
-}
-function setStoredVideoStation(url: string): void {
-  if (url) localStorage.setItem(VIDEO_STATION_KEY, url)
-  else localStorage.removeItem(VIDEO_STATION_KEY)
 }
 
 function getStoredAccent(): string {
@@ -98,7 +90,6 @@ export const useSettingsStore = defineStore('settings', () => {
   const nickname: Ref<string> = ref<string>(getStoredNickname())
   const fontSize: Ref<number> = ref<number>(getStoredFontSize())
   const corsProxy: Ref<string> = ref<string>(getStoredCorsProxy())
-  const videoStation: Ref<string> = ref<string>(getStoredVideoStation())
 
   watch(theme, (val) => {
     document.documentElement.setAttribute('data-theme', val)
@@ -132,9 +123,6 @@ export const useSettingsStore = defineStore('settings', () => {
   watch(corsProxy, (val) => {
     setStoredCorsProxy(val)
   })
-  watch(videoStation, (val) => {
-    setStoredVideoStation(val)
-  })
 
   function applyAccentColor(color: string): void {
     if (!color) {
@@ -162,6 +150,22 @@ export const useSettingsStore = defineStore('settings', () => {
     loaded.value = true
     applyAccentColor(accentColor.value)
     document.documentElement.style.setProperty('--base-font-size', `${fontSize.value}px`)
+
+    // 桌面端：跟随系统深色模式（仅当用户未手动指定主题时）
+    const themeBridge = window.__themeBridge
+    if (typeof window !== 'undefined' && themeBridge) {
+      const isManual = (await hasManualTheme())
+      const applySystem = async () => {
+        if (isManual) return
+        try {
+          theme.value = (await themeBridge.isDark()) ? 'dark' : 'light'
+        } catch {
+          /* ignore */
+        }
+      }
+      themeBridge.subscribe(() => applySystem())
+      void applySystem()
+    }
   }
 
   async function changeStoragePath(newPath: string): Promise<void> {
@@ -215,7 +219,6 @@ export const useSettingsStore = defineStore('settings', () => {
     fontSize,
     loaded,
     corsProxy,
-    videoStation,
     load,
     changeStoragePath,
     resetStoragePath,

@@ -1,17 +1,18 @@
 <script setup lang="ts">
 defineOptions({ name: "editor" });
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useI18n } from "@/composables/i18n/useI18n";
 import { useBlogStore } from "@/stores/blog";
 import { useSettingsStore } from "@/stores/settings";
 import TiptapEditor from "@/components/editor/TiptapEditor.vue";
-import { NInput, NDynamicTags, NButton, NText, NDivider, NH3, useMessage } from "naive-ui";
-import { ArrowBackOutline, PaperPlaneOutline } from "@vicons/ionicons5";
+import { NInput, NDynamicTags, NButton, NText, NDivider, useMessage } from "naive-ui";
+import { ArrowBackOutline } from "@vicons/ionicons5";
 import { h, type Component } from "vue";
 import { NIcon } from "naive-ui";
 import { isDesktop } from "@/services/storage";
 import AppPage from "@/components/app/AppPage.vue";
+import { usePublishAction } from "@/composables/editor/usePublishAction";
 
 const { t } = useI18n();
 const route = useRoute();
@@ -24,7 +25,11 @@ const isDesktopApp = isDesktop();
 const storagePathSet = computed(() => !isDesktopApp || !!settings.storagePath?.trim());
 
 const isEditing = computed(() => !!route.params.id);
-const pageTitle = computed(() => (isEditing.value ? t("editor.editTitle") : t("editor.newTitle")));
+
+// 进入编辑器（新建或编辑）即把发布动作注册给布局 header，供顶栏"发布文章"按钮复用
+const { registerEditor, unregisterEditor } = usePublishAction();
+registerEditor(handlePublish);
+onBeforeUnmount(unregisterEditor);
 
 // 编辑器实例的唯一 key：编辑模式用文章 id，新建模式用带时间戳的唯一值确保每次新建都重建编辑器
 const editorKey = ref((route.params.id as string) || `new-${Date.now()}`);
@@ -131,14 +136,7 @@ function openSettings(): void {
 </script>
 
 <template>
-  <AppPage
-    ref="articlePageRef"
-    class="editor-page"
-    :style="{
-      '--content-ml': 'auto',
-      '--content-mr': 'auto'
-    }"
-  >
+  <AppPage class="editor-page">
     <!-- 未设置存储路径时的提示横幅 -->
     <div class="path-warning-banner" v-if="isDesktopApp && !storagePathSet">
       <NText depth="2">{{ t("pathRequired") }}</NText>
@@ -147,55 +145,51 @@ function openSettings(): void {
       </NButton>
     </div>
 
-    <div class="editor-toolbar">
-      <!-- <NButton
-        tertiary
-        size="small"
-        :render-icon="renderIcon(ArrowBackOutline)"
-        @click="router.back()"
-      >
-        {{ t("nav.back") }}
-      </NButton> -->
-      <div></div>
-      <div></div>
-      <!-- <NH3 class="toolbar-title" :style="{ margin: 0 }">{{ pageTitle }}</NH3> -->
-      <NButton
-        type="primary"
-        size="small"
-        :render-icon="renderIcon(PaperPlaneOutline)"
-        @click="handlePublish"
-      >
-        {{ t("nav.publish") }}
-      </NButton>
+    <!-- 返回条（仅编辑模式显示，仅保留返回） -->
+    <div class="editor-toolbar" v-if="isEditing">
+      <div class="toolbar-left">
+        <NButton
+          quaternary
+          size="small"
+          :render-icon="renderIcon(ArrowBackOutline)"
+          @click="router.back()"
+        >
+          {{ t("nav.back") }}
+        </NButton>
+      </div>
     </div>
 
-    <div class="editor-form">
-      <NInput
-        v-model:value="title"
-        :placeholder="t('editor.titlePlaceholder')"
-        size="large"
-        class="title-input"
-      />
+    <!-- 主体：写作区 + 元信息侧栏 -->
+    <div class="editor-body">
+      <!-- 写作区 -->
+      <div class="editor-main">
+        <NInput
+          v-model:value="title"
+          :placeholder="t('editor.titlePlaceholder')"
+          class="title-input"
+        />
+        <TiptapEditor
+          :key="editorKey"
+          v-model="content"
+          :placeholder="'Start writing your paper...'"
+        />
+      </div>
 
-      <NInput
-        v-model:value="summary"
-        type="textarea"
-        :placeholder="t('editor.summaryPlaceholder')"
-        :autosize="{ minRows: 3, maxRows: 5 }"
-        class="summary-textarea"
-      />
+      <!-- 元信息侧栏 -->
+      <aside class="editor-meta">
+        <NText depth="2" class="meta-label">摘要</NText>
+        <NInput
+          v-model:value="summary"
+          type="textarea"
+          :rows="4"
+          :placeholder="t('editor.summaryPlaceholder')"
+          class="meta-block"
+        />
 
-      <NDivider />
+        <NDivider :style="{ margin: '12px 0' }" />
 
-      <TiptapEditor
-        :key="editorKey"
-        v-model="content"
-        :placeholder="'Start writing your paper...'"
-      />
-
-      <div class="tag-section">
-        <NText depth="2" class="tag-label">Tags</NText>
-        <NDynamicTags v-model:value="tags" size="small" />
+        <NText depth="2" class="meta-label">标签</NText>
+        <NDynamicTags v-model:value="tags" size="small" class="meta-block" />
         <div
           class="tag-suggestions"
           v-if="suggestedTags.filter((tag) => !tags.includes(tag)).length"
@@ -212,7 +206,7 @@ function openSettings(): void {
             + {{ tag }}
           </NButton>
         </div>
-      </div>
+      </aside>
     </div>
   </AppPage>
 </template>
@@ -220,7 +214,7 @@ function openSettings(): void {
 <style lang="less" scoped>
 .editor-page {
   width: 100%;
-  max-width: 920px;
+  max-width: 1040px;
   margin-left: var(--content-ml, auto);
   margin-right: var(--content-mr, auto);
 }
@@ -245,10 +239,24 @@ function openSettings(): void {
 }
 
 .editor-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1em;
+  padding: 0.6em 0.2em;
   margin-bottom: var(--sp-5);
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+
+  .toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+    min-width: 0;
+  }
 
   :deep(.n-button) {
     border-radius: var(--radius-sm);
@@ -258,46 +266,67 @@ function openSettings(): void {
 
 .toolbar-title {
   font-size: var(--fs-base);
-  font-weight: normal;
+  font-weight: 600;
   color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.editor-form {
+/* 主体：写作区 + 元信息侧栏 */
+.editor-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 24px;
+  align-items: start;
+}
+
+.editor-main {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: var(--sp-4);
 }
 
+.editor-meta {
+  position: sticky;
+  top: 72px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-bg-secondary);
+
+  .meta-label {
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--color-text-secondary);
+  }
+}
+
 .title-input {
   font-family: var(--font-serif) !important;
+
   :deep(.n-input__input-el) {
-    font-size: var(--fs-xl);
+    font-size: var(--fs-2xl);
     font-weight: 600;
+    line-height: 1.35;
   }
 }
 
-.summary-textarea {
-  :deep(&.n-input .n-input-wrapper) {
-    background-color: var(--color-bg-secondary);
+@media (max-width: 860px) {
+  .editor-body {
+    grid-template-columns: 1fr;
   }
-  :deep(.n-input__textarea-el) {
-    background: var(--color-bg-secondary);
-    border-radius: var(--radius-sm);
+  .editor-meta {
+    position: static;
+    order: 2;
   }
-}
-
-.tag-section {
-  margin-top: var(--sp-5);
-  padding-top: var(--sp-4);
-  border-top: 1px solid var(--color-border);
-}
-
-.tag-label {
-  font-size: var(--fs-sm);
-  font-weight: 500;
-  color: var(--color-text-secondary);
-  margin-bottom: 0.6em;
-  display: block;
+  .editor-main {
+    order: 1;
+  }
 }
 
 .tag-suggestions {

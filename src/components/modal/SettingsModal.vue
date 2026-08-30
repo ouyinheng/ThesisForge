@@ -9,12 +9,10 @@ import {
   NIcon,
   NInput,
   NSwitch,
-  NAvatar,
-  NSlider,
-  NUpload
+  NSlider
 } from "naive-ui";
 import { SunnyOutline, MoonOutline, Menu as MenuIcon, Close as CloseIcon } from "@vicons/ionicons5";
-import { OpenOutline, CheckmarkOutline, PencilOutline } from "@vicons/ionicons5";
+import { OpenOutline, CheckmarkOutline } from "@vicons/ionicons5";
 import { useSettingsStore } from "@/stores/settings";
 import { useTabsStore } from "@/stores/tabs";
 import { useI18n } from "@/composables/i18n/useI18n";
@@ -118,73 +116,6 @@ async function resetPath() {
   }
 }
 
-// 头像上传处理
-async function handleAvatarUpload({ file }: { file: { file: File } }) {
-  const imgFile = file.file;
-  if (!imgFile) return false;
-
-  // 验证文件类型
-  if (!imgFile.type.startsWith("image/")) {
-    message.error("请上传图片文件");
-    return false;
-  }
-
-  // 验证大小（限制 10MB）
-  if (imgFile.size > 10 * 1024 * 1024) {
-    message.error("图片大小不能超过 10MB");
-    return false;
-  }
-
-  // 压缩并转换为 base64
-  try {
-    const base64 = await compressImage(imgFile, 200, 0.7);
-    settings.avatar = base64;
-    message.success("头像已更新");
-  } catch (e) {
-    console.error(e);
-    message.error("上传失败");
-  }
-  return false; // 阻止默认上传行为
-}
-
-// 压缩图片到指定尺寸
-function compressImage(file: File, maxSize: number, quality: number): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      let { width, height } = img;
-      if (width > height) {
-        if (width > maxSize) {
-          height = (height * maxSize) / width;
-          width = maxSize;
-        }
-      } else {
-        if (height > maxSize) {
-          width = (width * maxSize) / height;
-          height = maxSize;
-        }
-      }
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        reject(new Error("无法创建 canvas context"));
-        return;
-      }
-      ctx.drawImage(img, 0, 0, width, height);
-      resolve(canvas.toDataURL("image/jpeg", quality));
-    };
-    img.onerror = reject;
-    img.src = URL.createObjectURL(file);
-  });
-}
-
-// 清除头像
-function clearAvatar() {
-  settings.avatar = "";
-}
-
 // 字体大小滑块
 const fontSizeOptions = [
   { label: "小", value: 12 },
@@ -199,6 +130,7 @@ const currentFontSizeLabel = computed(() => {
 
 // 主题色选项：默认 + 3 种
 const ACCENT_PRESETS = [
+  { label: "", value: "#000000" }, // 黑
   { label: "", value: "#D12F2F" }, // 默认红
   { label: "", value: "#2563EB" }, // 蓝
   { label: "", value: "#059669" }, // 绿
@@ -241,42 +173,6 @@ const ACCENT_PRESETS = [
     </template>
 
     <div class="settings-content">
-      <!-- 头像与昵称 -->
-      <div class="setting-profile-block">
-        <div class="profile-row">
-          <NUpload
-            :show-file-list="false"
-            :custom-request="handleAvatarUpload"
-            accept="image/*"
-            style="flex: 1"
-          >
-            <div class="avatar-wrapper">
-              <NAvatar :size="48" :src="settings.avatar" round class="profile-avatar">
-                <span v-if="!settings.avatar" class="avatar-fallback">
-                  {{ (settings.nickname || "?").charAt(0).toUpperCase() }}
-                </span>
-              </NAvatar>
-              <div class="avatar-mask">
-                <NIcon :size="16"><PencilOutline /></NIcon>
-              </div>
-            </div>
-          </NUpload>
-          <div class="profile-info">
-            <NInput
-              :value="settings.nickname"
-              @update:value="settings.nickname = $event || ''"
-              :placeholder="t('nicknamePlaceholder')"
-              size="small"
-              maxlength="20"
-              style="flex: 1"
-            />
-            <NButton v-if="settings.avatar" text size="tiny" type="error" @click="clearAvatar">
-              清除头像
-            </NButton>
-          </div>
-        </div>
-      </div>
-
       <!-- 字体大小 -->
       <div class="setting-row">
         <NText depth="3" class="setting-label">{{ t("fontSize") }}</NText>
@@ -399,19 +295,6 @@ const ACCENT_PRESETS = [
         </n-space>
       </div>
 
-      <!-- 天气城市 -->
-      <div class="setting-row">
-        <NText depth="3" class="setting-label">{{ t("city") }}</NText>
-        <NInput
-          :value="settings.weatherCity"
-          @update:value="settings.weatherCity = $event || ''"
-          :placeholder="t('cityPlaceholder')"
-          size="small"
-          style="width: 200px"
-          clearable
-        />
-      </div>
-
       <!-- 显示标签页 -->
       <div class="setting-row">
         <NText depth="3" class="setting-label">{{ t("showTabs") }}</NText>
@@ -482,22 +365,6 @@ const ACCENT_PRESETS = [
             </div>
           </div>
         </template>
-      </div>
-
-      <!-- 厂长资源地址 -->
-      <div class="setting-block">
-        <div class="block-header">
-          <NText class="setting-label">厂长资源地址</NText>
-        </div>
-        <NInput
-          :value="settings.videoStation"
-          @update:value="settings.videoStation = $event || ''"
-          size="small"
-          placeholder="https://www.4kcz.com"
-        />
-        <NText depth="3" class="hint-text">
-          web 端通过 Vite 代理自动转发（无需 CORS 配置），electron 直连访问
-        </NText>
       </div>
 
     </div>
@@ -603,7 +470,7 @@ const ACCENT_PRESETS = [
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  border: 2px solid transparent;
+  border: 2px solid rgba(128, 128, 128, 0.35);
   cursor: pointer;
   display: inline-flex;
   align-items: center;

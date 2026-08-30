@@ -108,6 +108,9 @@ export function useNaiveTheme() {
         textColor: text,
         titleTextColor: text,
         titleFontWeight: '600',
+        // 关闭按钮 hover/按下背景：亮色下为浅灰（仅一点点黑），暗色下为偏亮的白向底色，避免出现与主题不符的纯黑
+        closeColorHover: isDark ? 'rgba(255, 255, 255, 0.09)' : bgTertiary,
+        closeColorPressed: isDark ? 'rgba(255, 255, 255, 0.14)' : bgTertiary,
       },
       Modal: {
         color: bg,

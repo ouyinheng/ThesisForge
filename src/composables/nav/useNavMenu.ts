@@ -8,12 +8,6 @@ import {
   InformationCircleOutline,
   NewspaperOutline,
   GlobeOutline,
-  CheckboxOutline,
-  BookmarkOutline,
-  PlayCircleOutline,
-  FilmOutline,
-  CreateOutline,
-  LibraryOutline,
 } from "@vicons/ionicons5";
 
 export function useNavMenu() {
@@ -50,40 +44,6 @@ export function useNavMenu() {
       ]
     },
     {
-      label: () => t("nav.video"),
-      key: "video",
-      icon: renderIcon(PlayCircleOutline),
-      children: [
-        {
-          label: () => t("nav.videoFactory"),
-          key: "video-factory",
-          icon: renderIcon(FilmOutline)
-        }
-      ]
-    },
-    {
-      label: () => t("nav.novel"),
-      key: "novel",
-      icon: renderIcon(CreateOutline),
-      children: [
-        {
-          label: () => t("nav.novelBooks"),
-          key: "novel-bookshelf",
-          icon: renderIcon(LibraryOutline)
-        }
-      ]
-    },
-    {
-      label: () => "To-Do",
-      key: "todos",
-      icon: renderIcon(CheckboxOutline)
-    },
-    {
-      label: () => t("nav.collections"),
-      key: "collections",
-      icon: renderIcon(BookmarkOutline)
-    },
-    {
       label: () => t("nav.about"),
       key: "about",
       icon: renderIcon(InformationCircleOutline)
@@ -101,10 +61,6 @@ export function useNavMenu() {
     if (path === "/" || path.startsWith("/editor")) return "home";
     if (path === "/papers" || path.startsWith("/article/")) return "papers";
     if (path === "/juejin" || path.startsWith("/juejin/")) return "juejin";
-    if (path === "/video" || path.startsWith("/video/")) return "video-factory";
-    if (path === "/novel" || path.startsWith("/novel/")) return "novel-bookshelf";
-    if (path === "/todos" || path.startsWith("/todos")) return "todos";
-    if (path === "/collections" || path.startsWith("/collections")) return "collections";
     if (path === "/about") return "about";
     return "";
   });
@@ -117,12 +73,6 @@ export function useNavMenu() {
     papers: "/papers",
     about: "/about",
     juejin: "/juejin",
-    video: "/video",
-    "video-factory": "/video",
-    novel: "/novel",
-    "novel-bookshelf": "/novel",
-    todos: "/todos",
-    collections: "/collections"
   };
 
   /**
