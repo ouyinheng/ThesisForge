@@ -100,7 +100,7 @@ function createWindow() {
   }
 
   if (isMac) {
-    // macOS: 隐藏标题栏但保留红绿灯按钮（left inset）
+    // macOS: 保留自带红绿灯（hiddenInset），标题栏交给渲染层自绘
     windowOptions.titleBarStyle = 'hiddenInset'
   } else if (isWindows) {
     // Windows: 完全移除原生标题栏
